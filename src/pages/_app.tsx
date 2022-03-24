@@ -14,15 +14,15 @@ import {
   List,
   ListItem,
   Stack,
-  Toolbar,
-  Typography,
+  Theme,
+  Toolbar
 } from "@mui/material";
 import ListItemText from "@mui/material/ListItemText";
 import Image from "next/image";
 import ConnectWallet from "../components/ConnectWallet";
 import { ethers } from "ethers";
 import WalletProviderContext from "../contexts/WalletProviderContext";
-import { useState } from "react";
+import { FC, ReactNode, useEffect, useState } from "react";
 import { createSuperfluidMuiTheme } from "../theme";
 
 // Client-side cache, shared for the whole session of the user in the browser.
@@ -40,94 +40,115 @@ export default function MyApp(props: MyAppProps) {
   const [walletProvider, setWalletProvider] =
     useState<ethers.providers.Provider | null>(null);
 
-  const muiTheme = createSuperfluidMuiTheme("dark");
-
   return (
     <CacheProvider value={emotionCache}>
       <Head>
         <meta name="viewport" content="initial-scale=1, width=device-width" />
       </Head>
-      <ThemeProvider theme={muiTheme}>
-        <CssBaseline />
-        <WalletProviderContext.Provider
-          value={{
-            provider: walletProvider,
-            setProvider: (provider: ethers.providers.Provider) =>
-              setWalletProvider(provider),
-          }}
-        >
-          <Box sx={{ display: "flex" }}>
-            <AppBar
-              position="fixed"
-              sx={{
-                color: "text.primary",
-                width: `calc(100% - ${drawerWidth}px)`,
-                ml: `${drawerWidth}px`,
-                background: "transparent",
-                boxShadow: "none",
-              }}
-            >
-              <Stack
-                component={Toolbar}
-                direction="row"
-                justifyContent="flex-end"
-                alignItems="center"
-                spacing={2}
+      <WaitForMountTheme>
+        {(muiTheme) => (
+          <WalletProviderContext.Provider
+            value={{
+              provider: walletProvider,
+              setProvider: (provider: ethers.providers.Provider) =>
+                setWalletProvider(provider),
+            }}
+          >
+            <Box sx={{ display: "flex" }}>
+              <AppBar
+                position="fixed"
+                sx={{
+                  color: "text.primary",
+                  width: `calc(100% - ${drawerWidth}px)`,
+                  ml: `${drawerWidth}px`,
+                  background: "transparent",
+                  boxShadow: "none",
+                }}
               >
-                {walletProvider ? (
-                  <Chip label="Connected"></Chip>
-                ) : (
-                  <ConnectWallet>
-                    {(onClick) => (
-                      <Button variant="outlined" onClick={onClick}>
-                        Connect
-                      </Button>
-                    )}
-                  </ConnectWallet>
-                )}
-              </Stack>
-            </AppBar>
-            <Drawer
-              sx={{
-                width: drawerWidth,
-                flexShrink: 0,
-                "& .MuiDrawer-paper": {
+                <Stack
+                  component={Toolbar}
+                  direction="row"
+                  justifyContent="flex-end"
+                  alignItems="center"
+                  spacing={2}
+                >
+                  {walletProvider ? (
+                    <Chip label="Connected"></Chip>
+                  ) : (
+                    <ConnectWallet>
+                      {(onClick) => (
+                        <Button variant="outlined" onClick={onClick}>
+                          Connect
+                        </Button>
+                      )}
+                    </ConnectWallet>
+                  )}
+                </Stack>
+              </AppBar>
+              <Drawer
+                sx={{
                   width: drawerWidth,
-                  boxSizing: "border-box",
-                },
-              }}
-              variant="permanent"
-              anchor="left"
-            >
-              <Toolbar sx={{ height: "100px" }}>
-                <Image
-                  src={muiTheme.palette.mode === "dark" ? "/superfluid-logo-light.svg" : "/superfluid-logo-dark.svg"}
-                  width={167}
-                  height={40}
-                  layout="fixed"
-                  alt="Superfluid logo"
-                />
-              </Toolbar>
-              <Divider />
-              <List>
-                <ListItem button>
-                  <ListItemText primary="Dashboard" />
-                </ListItem>
-                <ListItem button>
-                  <ListItemText primary="Wrap" />
-                </ListItem>
-              </List>
-            </Drawer>
-            <Box
-              component="main"
-              sx={{ flexGrow: 1, bgcolor: "background.default", p: 3 }}
-            >
-              <Toolbar />
-              <Component {...pageProps} />
+                  flexShrink: 0,
+                  "& .MuiDrawer-paper": {
+                    width: drawerWidth,
+                    boxSizing: "border-box",
+                  },
+                }}
+                variant="permanent"
+                anchor="left"
+              >
+                <Toolbar sx={{ height: "100px" }}>
+                  <Image
+                    src={
+                      muiTheme.palette.mode === "dark"
+                        ? "/superfluid-logo-light.svg"
+                        : "/superfluid-logo-dark.svg"
+                    }
+                    width={167}
+                    height={40}
+                    layout="fixed"
+                    alt="Superfluid logo"
+                  />
+                </Toolbar>
+                <Divider />
+                <List>
+                  <ListItem button>
+                    <ListItemText primary="Dashboard" />
+                  </ListItem>
+                  <ListItem button>
+                    <ListItemText primary="Wrap" />
+                  </ListItem>
+                </List>
+              </Drawer>
+              <Box
+                component="main"
+                sx={{ flexGrow: 1, bgcolor: "background.default", p: 3 }}
+              >
+                <Toolbar />
+                <Component {...pageProps} />
+              </Box>
             </Box>
-          </Box>
-        </WalletProviderContext.Provider>
-      </ThemeProvider>
+          </WalletProviderContext.Provider>
+        )}
+      </WaitForMountTheme>
     </CacheProvider>
   );
 }
+
+const WaitForMountTheme: FC<{ children: (muiTheme: Theme) => ReactNode }> = ({
+  children,
+}) => {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+
+  const muiTheme = createSuperfluidMuiTheme("dark");
+
+  return (
+    <ThemeProvider theme={muiTheme}>
+      <CssBaseline />
+      {children(muiTheme)}
+    </ThemeProvider>
+  );
+};
