@@ -1,20 +1,38 @@
 import { createTheme } from '@mui/material/styles';
 import { red } from '@mui/material/colors';
 
-// Create a theme instance.
-const theme = createTheme({
-  
-  palette: {
-    primary: {
-      main: '#556cd6',
+export const createSuperfluidMuiTheme = (mode: "light" | "dark" = "light") =>
+  createTheme({
+    palette: {
+      mode: mode,
+      primary: {
+        main: "#00991F",
+      },
+      secondary: {
+        main: "#4816E2",
+      },
+      error: {
+        main: red.A400,
+      },
+      info: {
+        main: "rgba(0, 0, 0, 0.87)",
+      },
+      background:
+        mode === "light"
+          ? {
+              default: "#F9F9F9",
+            }
+          : {},
     },
-    secondary: {
-      main: '#19857b',
+    components: {
+      MuiButtonBase: {
+        // The properties to apply
+        defaultProps: {
+          disableRipple: true, // No more ripple, on the whole application!
+        },
+      },
     },
-    error: {
-      main: red.A400,
+    shape: {
+      borderRadius: 7,
     },
-  },
-});
-
-export default theme;
+  });

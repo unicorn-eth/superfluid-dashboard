@@ -3,7 +3,6 @@ import { AppProps } from "next/app";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { CacheProvider, EmotionCache } from "@emotion/react";
-import theme from "../theme";
 import createEmotionCache from "../createEmotionCache";
 import {
   AppBar,
@@ -24,6 +23,7 @@ import ConnectWallet from "../components/ConnectWallet";
 import { ethers } from "ethers";
 import WalletProviderContext from "../contexts/WalletProviderContext";
 import { useState } from "react";
+import { createSuperfluidMuiTheme } from "../theme";
 
 // Client-side cache, shared for the whole session of the user in the browser.
 const clientSideEmotionCache = createEmotionCache();
@@ -40,12 +40,14 @@ export default function MyApp(props: MyAppProps) {
   const [walletProvider, setWalletProvider] =
     useState<ethers.providers.Provider | null>(null);
 
+  const muiTheme = createSuperfluidMuiTheme("dark");
+
   return (
     <CacheProvider value={emotionCache}>
       <Head>
         <meta name="viewport" content="initial-scale=1, width=device-width" />
       </Head>
-      <ThemeProvider theme={theme}>
+      <ThemeProvider theme={muiTheme}>
         <CssBaseline />
         <WalletProviderContext.Provider
           value={{
@@ -99,7 +101,7 @@ export default function MyApp(props: MyAppProps) {
             >
               <Toolbar sx={{ height: "100px" }}>
                 <Image
-                  src="/superfluid-logo.svg"
+                  src={muiTheme.palette.mode === "dark" ? "/superfluid-logo-light.svg" : "/superfluid-logo-dark.svg"}
                   width={167}
                   height={40}
                   layout="fixed"
