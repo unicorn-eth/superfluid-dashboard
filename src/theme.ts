@@ -1,12 +1,14 @@
 import { createTheme } from '@mui/material/styles';
 import { red } from '@mui/material/colors';
 
+export const PRIMARY_COLOR = "#00991F"
+
 export const createSuperfluidMuiTheme = (mode: "light" | "dark" = "light") =>
   createTheme({
     palette: {
       mode: mode,
       primary: {
-        main: "#00991F",
+        main: PRIMARY_COLOR,
       },
       secondary: {
         main: "#4816E2",
