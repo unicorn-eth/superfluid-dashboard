@@ -1,4 +1,13 @@
-import { configureStore, createStore, Dispatch } from "@reduxjs/toolkit";
+import { configureStore, Dispatch } from "@reduxjs/toolkit";
+import {
+    persistReducer,
+    FLUSH,
+    REHYDRATE,
+    PAUSE,
+    PERSIST,
+    PURGE,
+    REGISTER,
+  } from 'redux-persist';
 import {
 
     allRpcEndpoints,
@@ -9,19 +18,29 @@ import {
     initializeTransactionSlice
 } from "@superfluid-finance/sdk-redux";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
+import webStorage from 'redux-persist/lib/storage';
 
 export const rpcApi = initializeRpcApiSlice(createApiWithReactHooks).injectEndpoints(allRpcEndpoints);
 export const subgraphApi = initializeSubgraphApiSlice(createApiWithReactHooks).injectEndpoints(allSubgraphEndpoints);
-export const transactions = initializeTransactionSlice();
+export const transactionSlice = initializeTransactionSlice();
+
+const transactionSlicePersistedReducer = persistReducer(
+    { key: 'transactions', version: 1, storage: webStorage },
+    transactionSlice.reducer,
+  );
 
 export const store = configureStore({
     reducer: {
         [rpcApi.reducerPath]: rpcApi.reducer,
         [subgraphApi.reducerPath]: subgraphApi.reducer,
-        sfTransactions: transactions.reducer,
+        transactions: transactionSlicePersistedReducer
     },
     middleware: (getDefaultMiddleware) =>
-        getDefaultMiddleware()
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER], // Ignore redux-persist actions: https://stackoverflow.com/a/62610422
+      },
+    })
             .concat(rpcApi.middleware)
             .concat(subgraphApi.middleware),
 });
