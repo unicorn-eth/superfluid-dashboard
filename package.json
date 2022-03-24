@@ -23,6 +23,7 @@
     "ethers": "latest",
     "graphql": "latest",
     "next": "latest",
+    "next-themes": "^0.1.1",
     "react": "latest",
     "react-dom": "latest",
     "react-redux": "latest",
