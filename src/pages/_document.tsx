@@ -1,7 +1,6 @@
 import Document, { Html, Head, Main, NextScript } from 'next/document';
 import createEmotionServer from '@emotion/server/create-instance';
-import createEmotionCache from '../createEmotionCache';
-import { PRIMARY_COLOR } from '../theme';
+import createEmotionCache from '../features/theme/createEmotionCache';
 
 export default class MyDocument extends Document {
   render() {
@@ -9,8 +8,8 @@ export default class MyDocument extends Document {
       <Html lang="en">
         <Head>
           {/* PWA primary color */}
-          <meta name="theme-color" content={PRIMARY_COLOR} />
-          <link rel="shortcut icon" href="/static/favicon.ico" />
+          <meta name="theme-color" content="#10BB35" />
+          <link rel="shortcut icon" href="/favicon.ico" />
           <link
             rel="stylesheet"
             href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"

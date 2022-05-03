@@ -1,14 +1,16 @@
 import { DarkModeOutlined, LightModeOutlined } from '@mui/icons-material';
 import { IconButton, Tooltip } from '@mui/material';
-import { useTheme } from 'next-themes'
+import { useTheme as useThemeNextThemes } from 'next-themes'
+import { useTheme as useThemeMui } from '@mui/material'
 
 export default function ThemeChanger() {
-  const { theme, setTheme } = useTheme()
+  const { setTheme } = useThemeNextThemes()
+  const muiTheme = useThemeMui()
 
-  const isDarkTheme = (theme === "dark");
+  const isDarkTheme = (muiTheme.palette.mode === "dark");
 
   return (
-    <Tooltip title={isDarkTheme ? 'Turn on the light' : 'Turn off the light'}>
+    <Tooltip title={isDarkTheme ? 'Light mode' : 'Dark mode'}>
       <IconButton color="primary" onClick={() => isDarkTheme ? setTheme("light") : setTheme("dark")}>
         {isDarkTheme ? (
           <LightModeOutlined fontSize="small" />
