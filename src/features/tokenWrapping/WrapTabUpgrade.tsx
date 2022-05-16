@@ -1,8 +1,18 @@
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
+  ApproveAllowanceRestoration,
+  SuperTokenUpgradeRestoration,
+  RestorationType,
+} from "../transactionRestoration/transactionRestorations";
+import { useNetworkContext } from "../network/NetworkContext";
+import { useWalletContext } from "../wallet/WalletContext";
+import { BigNumber, ethers } from "ethers";
+import { rpcApi, subgraphApi } from "../redux/store";
+import {
   Avatar,
   Button,
+  DialogActions,
   Input,
   Paper,
   Stack,
@@ -10,31 +20,30 @@ import {
   useTheme,
 } from "@mui/material";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { BigNumber, ethers } from "ethers";
 import { FC, useEffect, useRef, useState } from "react";
-import { useNetworkContext } from "../network/NetworkContext";
-import { COIN_ADDRESS } from "../redux/endpoints/adHocSubgraphEndpoints";
-import { rpcApi } from "../redux/store";
 import TokenIcon from "../token/TokenIcon";
-import {
-  ApproveAllowanceRestoration,
-  RestorationType,
-  SuperTokenUpgradeRestoration,
-} from "../transactionRestoration/transactionRestorations";
 import { TransactionButton } from "../transactions/TransactionButton";
-import { useWalletContext } from "../wallet/WalletContext";
 import { BalanceSuperToken } from "./BalanceSuperToken";
 import { BalanceUnderlyingToken } from "./BalanceUnderlyingToken";
 import { useSelectedTokenContext } from "./SelectedTokenPairContext";
-import { TokenDialogChip } from "./TokenDialogChip";
+import { TokenDialogButton } from "./TokenDialogButton";
+import { NATIVE_ASSET_ADDRESS } from "../redux/endpoints/adHocSubgraphEndpoints";
+import { useRouter } from "next/router";
+import { useTransactionDrawerContext } from "../transactionDrawer/TransactionDrawerContext";
+import {
+  TransactionDialogActions,
+  TransactionDialogButton,
+} from "../transactions/TransactionDialog";
 
 export const WrapTabUpgrade: FC<{
   restoration: SuperTokenUpgradeRestoration | undefined;
 }> = ({ restoration }) => {
   const theme = useTheme();
   const { network } = useNetworkContext();
+  const router = useRouter();
   const { walletAddress } = useWalletContext();
   const { selectedTokenPair, setSelectedTokenPair } = useSelectedTokenContext();
+  const { setTransactionDrawerOpen } = useTransactionDrawerContext();
 
   const [amount, setAmount] = useState<string>("");
   const [amountWei, setAmountWei] = useState<BigNumber>(
@@ -54,7 +63,7 @@ export const WrapTabUpgrade: FC<{
   }, [restoration]);
 
   const isUnderlyingBlockchainNativeAsset =
-    selectedTokenPair?.underlyingToken.address === COIN_ADDRESS;
+    selectedTokenPair?.underlyingToken.address === NATIVE_ASSET_ADDRESS;
 
   const allowanceQuery = rpcApi.useSuperTokenUpgradeAllowanceQuery(
     selectedTokenPair && !isUnderlyingBlockchainNativeAsset && walletAddress
@@ -96,6 +105,10 @@ export const WrapTabUpgrade: FC<{
     amountInputRef.current.focus();
   }, [amountInputRef, selectedTokenPair]);
 
+  const tokenPairsQuery = subgraphApi.useTokenUpgradeDowngradePairsQuery({
+    chainId: network.chainId,
+  });
+
   return (
     <Stack direction="column" alignItems="center">
       <Stack
@@ -121,20 +134,36 @@ export const WrapTabUpgrade: FC<{
               },
             }}
           />
-          <TokenDialogChip prioritizeSuperTokens={false} />
+          <TokenDialogButton
+            token={selectedTokenPair?.underlyingToken}
+            tokenSelection={{
+              tokenPairsQuery: {
+                data: tokenPairsQuery.data?.map((x) => x.underlyingToken),
+                isUninitialized: tokenPairsQuery.isUninitialized,
+                isLoading: tokenPairsQuery.isLoading,
+              },
+            }}
+            onTokenSelect={(token) =>
+              setSelectedTokenPair(
+                tokenPairsQuery?.data?.find(
+                  (x) => x.underlyingToken.address === token.address
+                )
+              )
+            }
+          />
         </Stack>
-        <Stack direction="row" justifyContent="space-between">
-          <Typography variant="body2" color="text.secondary">
+        {selectedTokenPair && walletAddress && (
+          <Stack direction="row" justifyContent="flex-end">
+            {/* <Typography variant="body2" color="text.secondary">
             ${Number(amount || 0).toFixed(2)}
-          </Typography>
-          {selectedTokenPair && walletAddress && (
+          </Typography> */}
             <BalanceUnderlyingToken
               chainId={network.chainId}
               accountAddress={walletAddress}
               tokenAddress={selectedTokenPair.underlyingToken.address}
             />
-          )}
-        </Stack>
+          </Stack>
+        )}
       </Stack>
 
       <Avatar
@@ -186,19 +215,19 @@ export const WrapTabUpgrade: FC<{
             </Button>
           </Stack>
 
-          <Stack direction="row" justifyContent="space-between">
-            <Typography variant="body2" color="text.secondary">
+          {selectedTokenPair && walletAddress && (
+            <Stack direction="row" justifyContent="flex-end">
+              {/* <Typography variant="body2" color="text.secondary">
               ${Number(amount || 0).toFixed(2)}
-            </Typography>
-            {selectedTokenPair && walletAddress && (
+            </Typography> */}
               <BalanceSuperToken
                 chainId={network.chainId}
                 accountAddress={walletAddress}
                 tokenAddress={selectedTokenPair.superToken.address}
                 typographyProps={{ color: "text.secondary" }}
               />
-            )}
-          </Stack>
+            </Stack>
+          )}
         </Stack>
       )}
 
@@ -236,9 +265,9 @@ export const WrapTabUpgrade: FC<{
               token: selectedTokenPair.underlyingToken,
             };
 
-            setTransactionDialogContent(
-              <AllowancePreview restoration={restoration} />
-            );
+            setTransactionDialogContent({
+              label: <AllowancePreview restoration={restoration} />,
+            });
 
             approveTrigger({
               chainId: network.chainId,
@@ -257,7 +286,7 @@ export const WrapTabUpgrade: FC<{
           hidden={false}
           disabled={isUpgradeDisabled}
           mutationResult={upgradeResult}
-          onClick={(setTransactionDialogContent) => {
+          onClick={(setTransactionDialogContent, closeTransactionDialog) => {
             if (isUpgradeDisabled) {
               throw Error(
                 "This should never happen because the token and amount must be selected for the button to be active."
@@ -279,13 +308,35 @@ export const WrapTabUpgrade: FC<{
               transactionExtraData: {
                 restoration,
               },
-            }).then(() => {
-              setAmount("");
-            });
+            })
+              .unwrap()
+              .then(() => setAmount(""));
 
-            setTransactionDialogContent(
-              <UpgradePreview restoration={restoration} />
-            );
+            setTransactionDialogContent({
+              label: <UpgradePreview restoration={restoration} />,
+              successActions: (
+                <TransactionDialogActions>
+                  <Stack gap={1} sx={{ width: "100%" }}>
+                    <TransactionDialogButton
+                      color="secondary"
+                      onClick={closeTransactionDialog}
+                    >
+                      Wrap more tokens
+                    </TransactionDialogButton>
+                    <TransactionDialogButton
+                      color="primary"
+                      onClick={() =>
+                        router
+                          .push("/")
+                          .then(() => setTransactionDrawerOpen(true))
+                      }
+                    >
+                      Go to tokens page ➜
+                    </TransactionDialogButton>
+                  </Stack>
+                </TransactionDialogActions>
+              ),
+            });
           }}
         >
           Upgrade to Super Token

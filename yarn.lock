@@ -984,10 +984,10 @@
   resolved "https://registry.yarnpkg.com/@rushstack/eslint-patch/-/eslint-patch-1.1.1.tgz#782fa5da44c4f38ae9fd38e9184b54e451936118"
   integrity sha512-BUyKJGdDWqvWC5GEhyOiUrGNi9iJUr4CU0O2WxJL6QJhHeeA/NVBalH+FeK0r/x/W0rPymXt5s78TDS7d6lCwg==
 
-"@superfluid-finance/sdk-core@0.3.3-dev.9bb2a5b.0":
-  version "0.3.3-dev.9bb2a5b.0"
-  resolved "https://npm.pkg.github.com/download/@superfluid-finance/sdk-core/0.3.3-dev.9bb2a5b.0/d7532ecd6b09a5a5a4c0cc8d6de354d7a3db27fc67686ed9ea86a0e9504f90be#2a8808140b4a78799e5cfb531bc5f93e79248c80"
-  integrity sha512-ZIfs5epMVnZ8e6DoPGtetpXpuXCDHaplfgT+kKsHA3Cu05R5xAEfA9Gv6qHp/cBsdFbn9vo2yYs7/Wmadx4X2w==
+"@superfluid-finance/sdk-core@0.4.1-dev.a77e0c8.0":
+  version "0.4.1-dev.a77e0c8.0"
+  resolved "https://npm.pkg.github.com/download/@superfluid-finance/sdk-core/0.4.1-dev.a77e0c8.0/ac061bfeba916e46ab7cfdaf433c2ce32ba67c4a86586a2d98aa111d9655de32#b626e7d6aea88f5a588f2fc872da8e7971d94e0f"
+  integrity sha512-TMWtfIFEuKmDx63iaMeML3UHFEY/QRo1FSHCBJp6gwHPi16H6Bg8IPR7rSFaN1Q6tKZQXl/trH+qrtVbdqgAFw==
   dependencies:
     ajv "^8.11.0"
     browserify "^17.0.0"
@@ -996,10 +996,10 @@
     lodash "^4.17.21"
     tsify "^5.0.4"
 
-"@superfluid-finance/sdk-redux@0.3.1-dev.9bb2a5b.0":
-  version "0.3.1-dev.9bb2a5b.0"
-  resolved "https://npm.pkg.github.com/download/@superfluid-finance/sdk-redux/0.3.1-dev.9bb2a5b.0/68bdc46b4ac92056544abe52811c4cc64e49c94c0327c725e9c2ad63eae0e8ec#6d25dc95650939ae786ea1e41925b76aaf861133"
-  integrity sha512-etY1DVWeFIVcwfnxSCvEXQjIUs8IZoHBR1btt5+8dgkWoSHGMrBmnX6PHNFiGdSr6rakhxdCYM1mSlhnWIwRIA==
+"@superfluid-finance/sdk-redux@0.3.1-dev.8fbfaca.0":
+  version "0.3.1-dev.8fbfaca.0"
+  resolved "https://npm.pkg.github.com/download/@superfluid-finance/sdk-redux/0.3.1-dev.8fbfaca.0/41b34dd6de0873acf7dbd29683cc45fc6139aeadb35c670667e6a17b9d351bb2#dfb6e6f7e16300f7391ebb06f2301d98772371de"
+  integrity sha512-MgvdENmiFjtImPJnveuu8Y9dSo5zacswQtPzO0L0qWDCMtxRktvw7wTkzoivaZrXhpu4fq8h+AvFHyYPnw5MCQ==
   dependencies:
     "@types/promise-retry" "^1.1.3"
     ethers "^5.5.4"
@@ -2838,10 +2838,10 @@ ethereum-cryptography@^0.1.3:
     secp256k1 "^4.0.1"
     setimmediate "^1.0.5"
 
-ethereum-multicall@^2.10.0:
-  version "2.10.0"
-  resolved "https://registry.yarnpkg.com/ethereum-multicall/-/ethereum-multicall-2.10.0.tgz#db8e41109e01c63058cf99a1b00770c93e8abb75"
-  integrity sha512-H5rYoNJ+ukV5Z932AkxsEzV9MveJgb1Y5aFfS5SmenFuUkTwx9gje1d1JSl44+Wa8PBLuu9+7BHIX1mdJdQLSg==
+ethereum-multicall@^2.11.0:
+  version "2.11.0"
+  resolved "https://registry.yarnpkg.com/ethereum-multicall/-/ethereum-multicall-2.11.0.tgz#4d1a1ea575a9b248685a6f09f5cf6c91df95031e"
+  integrity sha512-PUgMuahgRjGFBk9CNDq1T+PZrSPWm60JBoAjGjFhVJuFK1GjL2idoeKOTh7PteVetKPhGdd+Grg6pvmGipRJaw==
   dependencies:
     "@ethersproject/providers" "^5.0.10"
     ethers "^5.0.15"
@@ -4507,7 +4507,7 @@ promise-to-callback@^1.0.0:
     is-fn "^1.0.0"
     set-immediate-shim "^1.0.1"
 
-prop-types@^15.6.2, prop-types@^15.7.2, prop-types@^15.8.1:
+prop-types@^15.5.10, prop-types@^15.6.2, prop-types@^15.7.2, prop-types@^15.8.1:
   version "15.8.1"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.8.1.tgz#67d87bf1a694f48435cf332c24af10214a3140b5"
   integrity sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==
@@ -4609,6 +4609,13 @@ randomfill@^1.0.3:
   dependencies:
     randombytes "^2.0.5"
     safe-buffer "^5.1.0"
+
+react-blockies@1.4.1:
+  version "1.4.1"
+  resolved "https://registry.yarnpkg.com/react-blockies/-/react-blockies-1.4.1.tgz#d4f0faf95ac197213a297a370a4d7f77ea3d0b08"
+  integrity sha512-4N015X5oPNnD3xQPsiqolOFzPZSSWyc5mJhJUZShUCHtiGUxVN+1qsWTcglkHMNySux9hUofaispqcw9QkWP5Q==
+  dependencies:
+    prop-types "^15.5.10"
 
 react-dom@^16.8.6:
   version "16.14.0"

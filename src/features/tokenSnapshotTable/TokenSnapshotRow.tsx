@@ -14,10 +14,13 @@ import {
 import { AccountTokenSnapshot, Address } from "@superfluid-finance/sdk-core";
 import { FC, memo, useState } from "react";
 import { Network } from "../network/networks";
+import { rpcApi } from "../redux/store";
 import EtherFormatted from "../token/EtherFormatted";
 import FlowingBalance from "../token/FlowingBalance";
 import TokenIcon from "../token/TokenIcon";
 import TokenStreamsTable from "./TokenStreamsTable";
+import { BigNumber } from "ethers";
+import { UnitOfTime } from "../send/FlowRateInput";
 
 interface OpenIconProps {
   open: boolean;
@@ -49,15 +52,27 @@ const TokenSnapshotRow: FC<TokenSnapshotRowProps> = ({
   const [open, setOpen] = useState(false);
 
   const {
+    account,
+    token,
     tokenSymbol,
-    balanceUntilUpdatedAt,
-    totalNetFlowRate,
     totalInflowRate,
     totalOutflowRate,
-    updatedAtTimestamp,
     totalNumberOfActiveStreams,
     totalNumberOfClosedStreams,
   } = snapshot;
+
+  const realtimeBalance = rpcApi.useRealtimeBalanceQuery({
+    chainId: network.chainId,
+    accountAddress: account,
+    tokenAddress: token,
+  });
+
+  const balance =
+    realtimeBalance?.data?.balance ?? snapshot.balanceUntilUpdatedAt;
+  const balanceTimestamp =
+    realtimeBalance?.data?.balanceTimestamp ?? snapshot.updatedAtTimestamp;
+  const netFlowRate =
+    realtimeBalance?.data?.flowRate ?? snapshot.totalNetFlowRate;
 
   const hasStreams =
     totalNumberOfActiveStreams + totalNumberOfClosedStreams > 0;
@@ -87,8 +102,12 @@ const TokenSnapshotRow: FC<TokenSnapshotRowProps> = ({
             </ListItemAvatar>
             <ListItemText
               primary={tokenSymbol}
-              secondary="$1.00"
-              primaryTypographyProps={{ variant: "h6" }}
+              /**
+               * TODO: Remove fixed lineHeight from primaryTypographyProps after adding secondary text back
+               * This is just used to make table row look better
+               */
+              // secondary="$1.00"
+              primaryTypographyProps={{ lineHeight: "46px" }}
               secondaryTypographyProps={{
                 variant: "body2mono",
                 color: "text.secondary",
@@ -100,12 +119,14 @@ const TokenSnapshotRow: FC<TokenSnapshotRowProps> = ({
           <ListItemText
             primary={
               <FlowingBalance
-                balance={balanceUntilUpdatedAt}
-                flowRate={totalNetFlowRate}
-                balanceTimestamp={updatedAtTimestamp}
+                balance={balance}
+                flowRate={netFlowRate}
+                balanceTimestamp={balanceTimestamp}
+                etherDecimalPlaces={8}
+                disableRoundingIndicator
               />
             }
-            secondary="$1.00"
+            // secondary="$1.00"
             primaryTypographyProps={{ variant: "h6mono" }}
             secondaryTypographyProps={{
               variant: "body2mono",
@@ -116,7 +137,12 @@ const TokenSnapshotRow: FC<TokenSnapshotRowProps> = ({
         <TableCell>
           {totalNumberOfActiveStreams > 0 ? (
             <Typography variant="body2mono">
-              <EtherFormatted wei={totalNetFlowRate} />
+              {netFlowRate.charAt(0) !== "-" && "+"}
+              <EtherFormatted
+                wei={BigNumber.from(netFlowRate).mul(UnitOfTime.Month)}
+                etherDecimalPlaces={8}
+                disableRoundingIndicator
+              />
               /mo
             </Typography>
           ) : (
@@ -127,11 +153,21 @@ const TokenSnapshotRow: FC<TokenSnapshotRowProps> = ({
           {totalNumberOfActiveStreams > 0 ? (
             <Stack>
               <Typography variant="body2mono" color="primary">
-                + <EtherFormatted wei={totalInflowRate} />
+                +
+                <EtherFormatted
+                  wei={BigNumber.from(totalInflowRate).mul(UnitOfTime.Month)}
+                  etherDecimalPlaces={8}
+                  disableRoundingIndicator
+                />
                 /mo
               </Typography>
               <Typography variant="body2mono" color="error">
-                - <EtherFormatted wei={totalOutflowRate} />
+                -
+                <EtherFormatted
+                  wei={BigNumber.from(totalOutflowRate).mul(UnitOfTime.Month)}
+                  etherDecimalPlaces={8}
+                  disableRoundingIndicator
+                />
                 /mo
               </Typography>
             </Stack>
@@ -147,7 +183,7 @@ const TokenSnapshotRow: FC<TokenSnapshotRowProps> = ({
           )}
         </TableCell>
       </TableRow>
-      <TableRow sx={{ "td:first-of-type": { padding: 0 } }}>
+      <TableRow sx={{ "> td:first-of-type": { padding: 0 } }}>
         <TableCell
           colSpan={5}
           sx={{

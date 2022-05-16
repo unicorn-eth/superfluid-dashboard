@@ -29,7 +29,7 @@ export default function MyApp(props: MyAppProps) {
     readOnlyFrameworks.map((x) =>
       setFrameworkForSdkRedux(x.chainId, x.frameworkGetter)
     );
-  });
+  }, []);
 
   return (
     <ReduxProvider>
@@ -49,8 +49,10 @@ export default function MyApp(props: MyAppProps) {
                     <TransactionDrawerContextProvider>
                       <Layout>
                         <ReduxPersistGate>
-                          {/* TODO: Is this key={network.chainId} necessary? It triggers rerendering   */}
-                          <Component {...pageProps} />
+                          <Component
+                            key={`${network.slugName}`}
+                            {...pageProps}
+                          />
                         </ReduxPersistGate>
                       </Layout>
                     </TransactionDrawerContextProvider>

@@ -1,20 +1,25 @@
-import { Card, ToggleButton, ToggleButtonGroup } from "@mui/material";
-import { FC } from "react";
+import { memo } from "react";
 import {
   SuperTokenDowngradeRestoration,
   SuperTokenUpgradeRestoration,
 } from "../transactionRestoration/transactionRestorations";
-import { WrapTabDowngrade } from "./WrapTabDowngrade";
+import { Card, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { WrapTabUpgrade } from "./WrapTabUpgrade";
+import { WrapTabDowngrade } from "./WrapTabDowngrade";
+import { useRouter } from "next/router";
 
-export const WrapCard: FC<{
+export default memo(function WrapCard({
+  tabValue,
+  upgradeRestoration,
+  downgradeRestoration,
+}: {
   tabValue: "upgrade" | "downgrade";
-  onTabChange: (tabValue: "upgrade" | "downgrade") => void;
   upgradeRestoration?: SuperTokenUpgradeRestoration;
   downgradeRestoration?: SuperTokenDowngradeRestoration;
-}> = ({ tabValue, upgradeRestoration, downgradeRestoration, onTabChange }) => {
+}) {
+  const router = useRouter();
   const handleTabChange = (_e: unknown, newTab: "upgrade" | "downgrade") =>
-    newTab && onTabChange(newTab);
+    newTab && router.replace("/wrap?" + newTab);
 
   return (
     <Card
@@ -46,4 +51,4 @@ export const WrapCard: FC<{
       )}
     </Card>
   );
-};
+});

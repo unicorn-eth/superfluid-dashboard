@@ -23,6 +23,7 @@ import { adHocMulticallEndpoints } from "./endpoints/adHocMulticallEndpoints";
 import { adHocRpcEndpoints } from "./endpoints/adHocRpcEndpoints";
 import { adHocSubgraphEndpoints } from "./endpoints/adHocSubgraphEndpoints";
 import { assetApiSlice } from "../token/tokenManifestSlice";
+import { ensApi } from "../ens/ensApi.slice";
 
 export const rpcApi = initializeRpcApiSlice(createApiWithReactHooks)
   .injectEndpoints(allRpcEndpoints)
@@ -46,11 +47,6 @@ export const subgraphApi = initializeSubgraphApiSlice((options) =>
   .injectEndpoints(allSubgraphEndpoints)
   .injectEndpoints(adHocSubgraphEndpoints);
 
-const subgraphApiPersistedReducer = persistReducer(
-  { storage, key: "subgraph-api", version: 1 },
-  subgraphApi.reducer
-);
-
 export const transactionTracker = initializeTransactionTrackerSlice();
 
 const transactionTrackerPersistedReducer = persistReducer(
@@ -64,6 +60,7 @@ export const reduxStore = configureStore({
     [subgraphApi.reducerPath]: subgraphApi.reducer,
     [transactionTracker.reducerPath]: transactionTrackerPersistedReducer,
     [assetApiSlice.reducerPath]: assetApiSlice.reducer,
+    [ensApi.reducerPath]: ensApi.reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -73,7 +70,8 @@ export const reduxStore = configureStore({
     })
       .concat(rpcApi.middleware)
       .concat(subgraphApi.middleware)
-      .concat(assetApiSlice.middleware),
+      .concat(assetApiSlice.middleware)
+      .concat(ensApi.middleware),
 });
 
 export const reduxPersistor = persistStore(reduxStore);

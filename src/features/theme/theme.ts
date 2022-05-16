@@ -1,4 +1,4 @@
-import { Theme, ThemeOptions } from "@mui/material/styles";
+import { alpha, Theme, ThemeOptions } from "@mui/material/styles";
 import { FONT_FACES } from "./fonts";
 
 // TODO: Move to separate declaration file to make theme file cleaner?
@@ -67,7 +67,7 @@ export const getDesignTokens = (mode: "light" | "dark"): ThemeOptions => {
         disabled: getModeStyle("#12141E61", "#FFFFFF99"),
       },
       primary: {
-        main: getModeStyle("#10BB35FF", "#69E07FFF"),
+        main: getModeStyle("#10BB35FF", "#10BB35"),
         dark: getModeStyle("#0B8225FF", "#008900FF"),
         light: getModeStyle("#3FC85DFF", "#5FEF66FF"),
         contrastText: getModeStyle("#FFFFFFFF", "#FFFFFFDE"),
@@ -173,10 +173,12 @@ export const getDesignTokens = (mode: "light" | "dark"): ThemeOptions => {
         fontFamily: FONT_FAMILY_MONO,
       },
       body2: {
+        fontSize: "14px",
         fontWeight: 400,
         letterSpacing: 0.17,
       },
       body2mono: {
+        fontSize: "14px",
         fontWeight: 400,
         whiteSpace: "pre",
         fontFamily: FONT_FAMILY_MONO,
@@ -202,7 +204,7 @@ export const getDesignTokens = (mode: "light" | "dark"): ThemeOptions => {
       },
     },
     shadows: [
-      "none",
+      "none", // elevation 0
       getModeStyle(
         "0px 0px 6px 3px rgba(204, 204, 204, 0.25)",
         "0px 0px 6px 3px rgba(204, 204, 204, 0.25)"
@@ -330,6 +332,20 @@ export function getThemedComponents(theme: Theme): ThemeOptions {
             "&[type=number]": {
               "-moz-appearance": "textfield",
             },
+          },
+        },
+      },
+      MuiOutlinedInput: {
+        styleOverrides: {
+          root: {
+            // TODO: Figure out why styleOverrides.disabled is not working and replace .Mui-disabled hardcoded class.
+            ".Mui-disabled": {
+              backgroundColor: alpha(theme.palette.secondary.main, 0.3),
+              borderRadius: "10px",
+            },
+          },
+          notchedOutline: {
+            borderColor: theme.palette.other.outline,
           },
         },
       },
@@ -463,6 +479,16 @@ export function getThemedComponents(theme: Theme): ThemeOptions {
           },
         },
       },
+      MuiListSubheader: {
+        styleOverrides: {
+          root: {
+            color: theme.palette.text.primary,
+            backgroundColor: alpha(theme.palette.text.primary, 0.04),
+            ...theme.typography.body2,
+            lineHeight: "48px",
+          },
+        },
+      },
       MuiListItem: {
         styleOverrides: {
           root: {
@@ -470,10 +496,23 @@ export function getThemedComponents(theme: Theme): ThemeOptions {
           },
         },
       },
+      // TODO: Figure out why styleOverrides.selected does not work and replace hardcoded classes
+      MuiListItemButton: {
+        styleOverrides: {
+          root: {
+            "&.Mui-selected": {
+              color: theme.palette.primary.main,
+              ".MuiSvgIcon-root": {
+                color: theme.palette.primary.main,
+              },
+            },
+          },
+        },
+      },
       MuiListItemText: {
         defaultProps: {
           primaryTypographyProps: {
-            variant: "h5",
+            variant: "h6",
           },
         },
         styleOverrides: {
@@ -511,40 +550,29 @@ export function getThemedComponents(theme: Theme): ThemeOptions {
           disableRipple: true,
         },
       },
-      // TODO: Double check if this is still needed
-      // MuiTableBody: {
-      //   styleOverrides: {
-      //     root: {
-      //       // "tr:last-of-type > td": { border: 0 },
-      //     },
-      //   },
-      // },
-      // TODO: If we get tables to fit better then change paddings back to 8px 32px
       MuiTableRow: {
         styleOverrides: {
           root: {
             "td:first-of-type, th:first-of-type": {
-              padding: "8px 24px 8px 32px",
+              padding: "8px 32px",
             },
             "td:last-of-type, th:last-of-type": {
-              padding: "8px 32px 8px 24px",
+              padding: "8px 32px",
             },
           },
         },
       },
-      // TODO: If we get tables to fit better then change paddings back to 8px 32px
       MuiTableCell: {
         styleOverrides: {
           head: {
             ...theme.typography.body2,
-            fontSize: "14px",
             color: theme.palette.text.secondary,
-            padding: "8px 24px",
+            padding: "8px 32px",
             minHeight: 0,
           },
           body: {
             ...theme.typography.body2,
-            padding: "12px 24px",
+            padding: "12px 32px",
           },
         },
       },

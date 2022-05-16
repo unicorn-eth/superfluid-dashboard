@@ -3,7 +3,7 @@ import type { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { SelectedTokenContextProvider } from "../features/tokenWrapping/SelectedTokenPairContext";
-import { WrapCard } from "../features/tokenWrapping/WrapCard";
+import WrapCard from "../features/tokenWrapping/WrapCard";
 import { useTransactionRestorationContext } from "../features/transactionRestoration/TransactionRestorationContext";
 import {
   SuperTokenDowngradeRestoration,
@@ -19,38 +19,26 @@ const Wrap: NextPage = () => {
   >();
 
   useEffect(() => {
-    if (upgrade !== undefined) {
-      setTabValue("upgrade");
-    } else if (downgrade !== undefined) {
-      setTabValue("downgrade");
-    } else {
-      setTabValue("upgrade");
-    }
+    const newTabValue = downgrade !== undefined ? "downgrade" : "upgrade"; // Default is "upgrade".
+    setTabValue(newTabValue);
   }, [upgrade, downgrade]);
 
   const { restoration, onRestored } = useTransactionRestorationContext();
 
-  const [upgradeRestoration, setUpgradeRestoration] = useState<
-    SuperTokenUpgradeRestoration | undefined
-  >();
+  let upgradeRestoration: SuperTokenUpgradeRestoration | undefined;
+  let downgradeRestoration: SuperTokenDowngradeRestoration | undefined;
 
-  const [downgradeRestoration, setDowngradeRestoration] = useState<
-    SuperTokenDowngradeRestoration | undefined
-  >();
-
-  useEffect(() => {
-    if (restoration) {
-      switch (restoration.type) {
-        case RestorationType.Upgrade:
-          setUpgradeRestoration(restoration);
-          break;
-        case RestorationType.Downgrade:
-          setDowngradeRestoration(restoration);
-          break;
-      }
-      onRestored();
+  if (restoration) {
+    switch (restoration.type) {
+      case RestorationType.Upgrade:
+        upgradeRestoration = restoration as SuperTokenUpgradeRestoration;
+        break;
+      case RestorationType.Downgrade:
+        downgradeRestoration = restoration as SuperTokenDowngradeRestoration;
+        break;
     }
-  }, [setUpgradeRestoration, setDowngradeRestoration, restoration, onRestored]);
+    onRestored();
+  }
 
   return (
     <Container maxWidth="lg">
@@ -69,12 +57,6 @@ const Wrap: NextPage = () => {
               tabValue={tabValue}
               upgradeRestoration={upgradeRestoration}
               downgradeRestoration={downgradeRestoration}
-              onTabChange={(tabValue) => {
-                setTabValue(tabValue);
-                // Reset restorations on tab change.
-                setUpgradeRestoration(undefined);
-                setDowngradeRestoration(undefined);
-              }}
             />
           )}
         </SelectedTokenContextProvider>

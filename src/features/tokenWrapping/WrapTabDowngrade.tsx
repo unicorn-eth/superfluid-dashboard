@@ -1,30 +1,43 @@
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { Avatar, Button, Input, Paper, Stack, Typography } from "@mui/material";
-import { useTheme } from "@mui/system";
+import {
+  Avatar,
+  Button,
+  DialogActions,
+  Input,
+  Paper,
+  Stack,
+  Typography,
+  useTheme,
+} from "@mui/material";
 import { BigNumber, ethers } from "ethers";
 import { FC, useEffect, useRef, useState } from "react";
-import { useNetworkContext } from "../network/NetworkContext";
-import { rpcApi } from "../redux/store";
-import TokenIcon from "../token/TokenIcon";
 import {
-  RestorationType,
   SuperTokenDowngradeRestoration,
+  RestorationType,
 } from "../transactionRestoration/transactionRestorations";
+import { useNetworkContext } from "../network/NetworkContext";
+import { rpcApi, subgraphApi } from "../redux/store";
+import TokenIcon from "../token/TokenIcon";
 import { TransactionButton } from "../transactions/TransactionButton";
 import { useWalletContext } from "../wallet/WalletContext";
 import { BalanceSuperToken } from "./BalanceSuperToken";
 import { BalanceUnderlyingToken } from "./BalanceUnderlyingToken";
 import { useSelectedTokenContext } from "./SelectedTokenPairContext";
-import { TokenDialogChip } from "./TokenDialogChip";
+import { TokenDialogButton } from "./TokenDialogButton";
+import { useRouter } from "next/router";
+import { useTransactionDrawerContext } from "../transactionDrawer/TransactionDrawerContext";
+import { TransactionDialogActions, TransactionDialogButton } from "../transactions/TransactionDialog";
 
 export const WrapTabDowngrade: FC<{
   restoration: SuperTokenDowngradeRestoration | undefined;
 }> = ({ restoration }) => {
   const theme = useTheme();
   const { network } = useNetworkContext();
+  const router = useRouter();
   const { walletAddress } = useWalletContext();
   const { selectedTokenPair, setSelectedTokenPair } = useSelectedTokenContext();
+  const { setTransactionDrawerOpen } = useTransactionDrawerContext();
 
   const [amount, setAmount] = useState<string>("");
   const [amountWei, setAmountWei] = useState<BigNumber>(
@@ -47,11 +60,21 @@ export const WrapTabDowngrade: FC<{
     rpcApi.useSuperTokenDowngradeMutation();
   const isDowngradeDisabled = !selectedTokenPair || amountWei.isZero();
 
+  console.log({
+    isDowngradeDisabled,
+    selectedTokenPair,
+    amount: amountWei.toString()
+  })
+
   const amountInputRef = useRef<HTMLInputElement>(undefined!);
 
   useEffect(() => {
     amountInputRef.current.focus();
   }, [amountInputRef, selectedTokenPair]);
+
+  const tokenPairsQuery = subgraphApi.useTokenUpgradeDowngradePairsQuery({
+    chainId: network.chainId,
+  });
 
   return (
     <Stack direction="column" alignItems="center">
@@ -73,26 +96,44 @@ export const WrapTabDowngrade: FC<{
             onChange={(e) => setAmount(e.currentTarget.value)}
             inputProps={{
               sx: {
+                ...theme.typography.largeInput,
                 p: 0,
               },
             }}
           />
-          <TokenDialogChip prioritizeSuperTokens={true} />
-        </Stack>
-        <Stack direction="row" justifyContent="space-between">
-          <Typography variant="body2" color="text.secondary">
-            ${Number(amount || 0).toFixed(2)}
-          </Typography>
 
-          {selectedTokenPair && walletAddress && (
+          <TokenDialogButton
+            token={selectedTokenPair?.superToken}
+            tokenSelection={{
+              tokenPairsQuery: {
+                data: tokenPairsQuery.data?.map((x) => x.superToken),
+                isUninitialized: tokenPairsQuery.isUninitialized,
+                isLoading: tokenPairsQuery.isLoading,
+              },
+            }}
+            onTokenSelect={(token) =>
+              setSelectedTokenPair(
+                tokenPairsQuery?.data?.find(
+                  (x) => x.superToken.address === token.address
+                )
+              )
+            }
+          />
+        </Stack>
+        {selectedTokenPair && walletAddress && (
+          <Stack direction="row" justifyContent="flex-end">
+            {/* <Typography variant="body2" color="text.secondary">
+            ${Number(amount || 0).toFixed(2)}
+          </Typography> */}
+
             <BalanceSuperToken
               chainId={network.chainId}
               accountAddress={walletAddress}
               tokenAddress={selectedTokenPair.superToken.address}
               typographyProps={{ color: "text.secondary" }}
             />
-          )}
-        </Stack>
+          </Stack>
+        )}
       </Stack>
 
       <Avatar
@@ -124,6 +165,7 @@ export const WrapTabDowngrade: FC<{
               value={amount}
               inputProps={{
                 sx: {
+                  ...theme.typography.largeInput,
                   p: 0,
                 },
               }}
@@ -143,18 +185,18 @@ export const WrapTabDowngrade: FC<{
             </Button>
           </Stack>
 
-          <Stack direction="row" justifyContent="space-between">
-            <Typography variant="body2" color="text.secondary">
+          {selectedTokenPair && walletAddress && (
+            <Stack direction="row" justifyContent="flex-end">
+              {/* <Typography variant="body2" color="text.secondary">
               ${Number(amount || 0).toFixed(2)}
-            </Typography>
-            {selectedTokenPair && walletAddress && (
+            </Typography> */}
               <BalanceUnderlyingToken
                 chainId={network.chainId}
                 accountAddress={walletAddress}
                 tokenAddress={selectedTokenPair.underlyingToken.address}
               />
-            )}
-          </Stack>
+            </Stack>
+          )}
         </Stack>
       )}
 
@@ -168,7 +210,7 @@ export const WrapTabDowngrade: FC<{
         hidden={false}
         mutationResult={downgradeResult}
         disabled={isDowngradeDisabled}
-        onClick={(setTransactionDialogContent) => {
+        onClick={(setTransactionDialogContent, closeTransactionDialog) => {
           if (isDowngradeDisabled) {
             throw Error(
               "This should never happen because the token and amount must be selected for the button to be active."
@@ -190,13 +232,31 @@ export const WrapTabDowngrade: FC<{
             transactionExtraData: {
               restoration,
             },
-          }).then(() => {
-            setAmount("");
-          });
+          })
+            .unwrap()
+            .then(() => setAmount(""));
 
-          setTransactionDialogContent(
-            <DowngradePreview restoration={restoration} />
-          );
+          setTransactionDialogContent({
+            label: <DowngradePreview restoration={restoration} />,
+            successActions: (
+              <TransactionDialogActions>
+                <TransactionDialogButton
+                  color="secondary"
+                  onClick={closeTransactionDialog}
+                >
+                  Unwrap more tokens
+                </TransactionDialogButton>
+                <TransactionDialogButton
+                  color="primary"
+                  onClick={() =>
+                    router.push("/").then(() => setTransactionDrawerOpen(true))
+                  }
+                >
+                  Go to tokens page ➜
+                </TransactionDialogButton>
+              </TransactionDialogActions>
+            ),
+          });
         }}
       >
         Downgrade

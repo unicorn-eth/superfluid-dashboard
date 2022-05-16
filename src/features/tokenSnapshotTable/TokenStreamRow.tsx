@@ -11,10 +11,13 @@ import {
 } from "@mui/material";
 import { Address, Stream } from "@superfluid-finance/sdk-core";
 import { format } from "date-fns";
+import { BigNumber } from "ethers";
 import { FC, memo } from "react";
 import shortenAddress from "../../utils/shortenAddress";
+import { UnitOfTime } from "../send/FlowRateInput";
 import EtherFormatted from "../token/EtherFormatted";
 import FlowingBalance from "../token/FlowingBalance";
+import Blockies from "react-blockies";
 
 export const TokenStreamRowLoading = () => (
   <TableRow>
@@ -71,7 +74,9 @@ const TokenStreamRow: FC<TokenStreamRowProps> = ({ address, stream }) => {
       <TableCell sx={{ pl: "72px" }}>
         <Stack direction="row" alignItems="center" gap={1.5}>
           {outgoing ? <ArrowForwardIcon /> : <ArrowBackIcon />}
-          <Avatar variant="rounded" />
+          <Avatar variant="rounded" sx={{ width: 32, height: 32 }}>
+            <Blockies seed={outgoing ? receiver : sender} />
+          </Avatar>
           <Typography variant="h6">
             {shortenAddress(outgoing ? receiver : sender)}
           </Typography>
@@ -83,14 +88,20 @@ const TokenStreamRow: FC<TokenStreamRowProps> = ({ address, stream }) => {
             balance={streamedUntilUpdatedAt}
             flowRate={currentFlowRate}
             balanceTimestamp={updatedAtTimestamp}
+            etherDecimalPlaces={8}
+            disableRoundingIndicator
           />
         </Typography>
       </TableCell>
       <TableCell>
         {ongoing ? (
           <Typography variant="body2mono">
-            {outgoing ? "- " : "+ "}
-            <EtherFormatted wei={currentFlowRate} />
+            {outgoing ? "-" : "+"}
+            <EtherFormatted
+              wei={BigNumber.from(currentFlowRate).mul(UnitOfTime.Month)}
+              etherDecimalPlaces={8}
+              disableRoundingIndicator
+            />
             /mo
           </Typography>
         ) : (

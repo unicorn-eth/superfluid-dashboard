@@ -15,6 +15,7 @@ import {
 import { useTheme } from "@mui/system";
 import { FC, memo, MouseEvent, useState } from "react";
 import { useNetworkContext } from "./NetworkContext";
+import NetworkIcon from "./NetworkIcon";
 import { mainNetworks, Network, testNetworks } from "./networks";
 
 interface NetworkItemProps {
@@ -31,11 +32,9 @@ const NetworkItem: FC<NetworkItemProps> = ({ network, selected, onClick }) => (
     sx={{ height: 50 }}
   >
     <ListItemAvatar sx={{ mr: 1 }}>
-      <Avatar sx={{ width: 24, height: 24 }} src={network.icon} />
+      <NetworkIcon network={network} size={24} fontSize={16} />
     </ListItemAvatar>
-    <ListItemText primaryTypographyProps={{ variant: "h6" }}>
-      {network.displayName}
-    </ListItemText>
+    <ListItemText>{network.displayName}</ListItemText>
   </MenuItem>
 );
 
@@ -43,7 +42,7 @@ export default memo(function SelectNetwork() {
   const theme = useTheme();
 
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const [showTestnets, setShowTestnets] = useState(true);
+  const [showTestnets, setShowTestnets] = useState(false);
 
   const open = Boolean(anchorEl);
 
@@ -74,10 +73,11 @@ export default memo(function SelectNetwork() {
         color="secondary"
         size="large"
         startIcon={
-          <Avatar sx={{ width: 24, height: 24 }} src={selectedNetwork.icon} />
+          <NetworkIcon network={selectedNetwork} size={24} fontSize={16} />
         }
         endIcon={<KeyboardArrowDownIcon />}
         onClick={handleOpen}
+        sx={{ ".MuiButton-startIcon > *:nth-of-type(1)": { fontSize: "16px" } }}
       >
         {selectedNetwork.displayName}
       </Button>

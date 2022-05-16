@@ -1,5 +1,11 @@
 import { memoize } from "lodash";
-import { WrappedSuperTokenPair } from "../redux/endpoints/adHocSubgraphEndpoints";
+import {
+  NATIVE_ASSET_ADDRESS,
+  SuperTokenPair,
+  SuperTokenType,
+  TokenType,
+  UnderlyingTokenType,
+} from "../redux/endpoints/adHocSubgraphEndpoints";
 
 export type Network = {
   displayName: string;
@@ -11,9 +17,12 @@ export type Network = {
   getLinkForAddress(adderss: string): string;
   isTestnet: boolean;
   icon?: string;
-  coin: {
+  color?: string;
+  bufferTimeInMinutes: number; // Hard-code'ing this per network is actually incorrect approach. It's token-based and can be governed.
+  nativeAsset: {
     symbol: string;
     superToken: {
+      type: TokenType.NativeAssetSuperToken;
       symbol: string;
       name: string;
       address: string;
@@ -27,7 +36,9 @@ export const networks: Network[] = [
     slugName: "ropsten",
     chainId: 3,
     isTestnet: true,
+    bufferTimeInMinutes: 60,
     icon: "/icons/network/ropsten.jpg",
+    color: "#29b6af",
     rpcUrl: `https://rpc-endpoints.superfluid.dev/ropsten`,
     subgraphUrl:
       "https://api.thegraph.com/subgraphs/name/superfluid-finance/protocol-v1-ropsten",
@@ -35,9 +46,10 @@ export const networks: Network[] = [
       `https://ropsten.etherscan.io/tx/${txHash}`,
     getLinkForAddress: (address: string): string =>
       `https://ropsten.etherscan.io/address/${address}`,
-    coin: {
+    nativeAsset: {
       symbol: "ETH",
       superToken: {
+        type: TokenType.NativeAssetSuperToken,
         symbol: "ETHx",
         name: "Super ETH",
         address: "0x6fc99f5591b51583ba15a8c2572408257a1d2797",
@@ -49,6 +61,8 @@ export const networks: Network[] = [
     slugName: "rinkeby",
     chainId: 4,
     isTestnet: true,
+    color: "#ff4a8d",
+    bufferTimeInMinutes: 60,
     icon: "/icons/network/rinkeby.jpg",
     rpcUrl: `https://rpc-endpoints.superfluid.dev/rinkeby`,
     subgraphUrl:
@@ -57,9 +71,10 @@ export const networks: Network[] = [
       `https://rinkeby.etherscan.io/tx/${txHash}`,
     getLinkForAddress: (address: string): string =>
       `https://rinkeby.etherscan.io/address/${address}`,
-    coin: {
+    nativeAsset: {
       symbol: "ETH",
       superToken: {
+        type: TokenType.NativeAssetSuperToken,
         symbol: "ETHx",
         address: "0xa623b2dd931c5162b7a0b25852f4024db48bb1a0",
         name: "Super ETH",
@@ -71,7 +86,9 @@ export const networks: Network[] = [
     slugName: "goerli",
     chainId: 5,
     isTestnet: true,
+    bufferTimeInMinutes: 60,
     icon: "/icons/network/goerli.jpg",
+    color: "#9064ff",
     rpcUrl: `https://rpc-endpoints.superfluid.dev/goerli`,
     subgraphUrl:
       "https://api.thegraph.com/subgraphs/name/superfluid-finance/protocol-v1-goerli",
@@ -79,9 +96,10 @@ export const networks: Network[] = [
       `https://goerli.etherscan.io/tx/${txHash}`,
     getLinkForAddress: (address: string): string =>
       `https://goerli.etherscan.io/address/${address}`,
-    coin: {
+    nativeAsset: {
       symbol: "ETH",
       superToken: {
+        type: TokenType.NativeAssetSuperToken,
         symbol: "ETHx",
         address: "0x5943f705abb6834cad767e6e4bb258bc48d9c947",
         name: "Super ETH",
@@ -93,7 +111,9 @@ export const networks: Network[] = [
     slugName: "kovan",
     chainId: 42,
     isTestnet: true,
+    bufferTimeInMinutes: 60,
     icon: "/icons/network/kovan.jpg",
+    color: "#f6c343",
     rpcUrl: `https://rpc-endpoints.superfluid.dev/kovan`,
     subgraphUrl:
       "https://api.thegraph.com/subgraphs/name/superfluid-finance/protocol-v1-kovan",
@@ -101,9 +121,10 @@ export const networks: Network[] = [
       `https://kovan.etherscan.io/tx/${txHash}`,
     getLinkForAddress: (address: string): string =>
       `https://kovan.etherscan.io/address/${address}`,
-    coin: {
+    nativeAsset: {
       symbol: "ETH",
       superToken: {
+        type: TokenType.NativeAssetSuperToken,
         symbol: "ETHx",
         address: "0xdd5462a7db7856c9128bc77bd65c2919ee23c6e1",
         name: "Super ETH",
@@ -115,7 +136,8 @@ export const networks: Network[] = [
     slugName: "xdai",
     chainId: 100,
     isTestnet: false,
-    icon: "/icons/network/gnosis.jpg",
+    bufferTimeInMinutes: 240,
+    icon: "/icons/network/gnosis.svg",
     rpcUrl: "https://rpc-endpoints.superfluid.dev/xdai",
     subgraphUrl:
       "https://api.thegraph.com/subgraphs/name/superfluid-finance/protocol-v1-xdai",
@@ -123,9 +145,10 @@ export const networks: Network[] = [
       `https://blockscout.com/xdai/mainnet/tx/${txHash}`,
     getLinkForAddress: (address: string): string =>
       `https://blockscout.com/xdai/mainnet/address/${address}`,
-    coin: {
+    nativeAsset: {
       symbol: "xDai",
       superToken: {
+        type: TokenType.NativeAssetSuperToken,
         symbol: "xDAIx",
         address: "0x59988e47a3503aafaa0368b9def095c818fdca01",
         name: "Super xDAI",
@@ -137,7 +160,8 @@ export const networks: Network[] = [
     slugName: "matic",
     chainId: 137,
     isTestnet: false,
-    icon: "/icons/network/polygon.jpg",
+    bufferTimeInMinutes: 240,
+    icon: "/icons/network/polygon.svg",
     rpcUrl: `https://rpc-endpoints.superfluid.dev/matic`,
     subgraphUrl:
       "https://api.thegraph.com/subgraphs/name/superfluid-finance/protocol-v1-matic",
@@ -145,9 +169,10 @@ export const networks: Network[] = [
       `https://polygonscan.com/tx/${txHash}`,
     getLinkForAddress: (address: string): string =>
       `https://polygonscan.com/address/${address}`,
-    coin: {
+    nativeAsset: {
       symbol: "MATIC",
       superToken: {
+        type: TokenType.NativeAssetSuperToken,
         symbol: "MATICx",
         address: "0x3ad736904e9e65189c3000c7dd2c8ac8bb7cd4e3",
         name: "Super MATIC",
@@ -159,6 +184,8 @@ export const networks: Network[] = [
     slugName: "mumbai",
     chainId: 80001,
     isTestnet: true,
+    bufferTimeInMinutes: 60,
+    color: "#3099f2",
     rpcUrl: `https://rpc-endpoints.superfluid.dev/mumbai`,
     subgraphUrl:
       "https://api.thegraph.com/subgraphs/name/superfluid-finance/protocol-v1-mumbai",
@@ -166,9 +193,10 @@ export const networks: Network[] = [
       `https://mumbai.polygonscan.com/tx/${txHash}`,
     getLinkForAddress: (address: string): string =>
       `https://mumbai.polygonscan.com/address/${address}`,
-    coin: {
+    nativeAsset: {
       symbol: "MATIC",
       superToken: {
+        type: TokenType.NativeAssetSuperToken,
         symbol: "MATICx",
         address: "0x96b82b65acf7072efeb00502f45757f254c2a0d4",
         name: "Super MATIC",
@@ -180,7 +208,9 @@ export const networks: Network[] = [
     slugName: "arbitrum-rinkeby",
     chainId: 421611,
     isTestnet: true,
-    icon: "/icons/network/rinkeby.jpg",
+    bufferTimeInMinutes: 60,
+    icon: "/icons/network/arbitrum.svg",
+    color: "#29b6af",
     rpcUrl: `https://rpc-endpoints.superfluid.dev/arbitrum-rinkeby`,
     subgraphUrl:
       "https://api.thegraph.com/subgraphs/name/superfluid-finance/protocol-v1-arbitrum-rinkeby",
@@ -188,9 +218,10 @@ export const networks: Network[] = [
       `https://rinkeby-explorer.arbitrum.io/tx/${txHash}`,
     getLinkForAddress: (address: string): string =>
       `https://rinkeby-explorer.arbitrum.io/address/${address}`,
-    coin: {
+    nativeAsset: {
       symbol: "ETH",
       superToken: {
+        type: TokenType.NativeAssetSuperToken,
         symbol: "ETHx",
         address: "0xbf7bcce8d60a9c3f6bfaec9346aa85b9f781a4e9",
         name: "Super ETH",
@@ -202,7 +233,9 @@ export const networks: Network[] = [
     slugName: "optimism-kovan",
     chainId: 69,
     isTestnet: true,
-    icon: "/icons/network/kovan.jpg",
+    bufferTimeInMinutes: 60,
+    icon: "/icons/network/optimism.svg",
+    color: "#8b45b6",
     rpcUrl: `https://rpc-endpoints.superfluid.dev/optimism-kovan`,
     subgraphUrl:
       "https://api.thegraph.com/subgraphs/name/superfluid-finance/protocol-v1-optimism-kovan",
@@ -210,9 +243,10 @@ export const networks: Network[] = [
       `https://kovan-optimistic.etherscan.io/tx/${txHash}`,
     getLinkForAddress: (address: string): string =>
       `https://kovan-optimistic.etherscan.io/address/${address}`,
-    coin: {
+    nativeAsset: {
       symbol: "ETH",
       superToken: {
+        type: TokenType.NativeAssetSuperToken,
         symbol: "ETHx",
         address: "0xe72f289584eda2be69cfe487f4638f09bac920db",
         name: "Super ETH",
@@ -224,6 +258,7 @@ export const networks: Network[] = [
     slugName: "avalanche-fuji",
     chainId: 43113,
     isTestnet: true,
+    bufferTimeInMinutes: 60,
     icon: "/icons/network/avalanche.jpg",
     rpcUrl: "https://rpc-endpoints.superfluid.dev/avalanche-fuji",
     subgraphUrl:
@@ -232,9 +267,10 @@ export const networks: Network[] = [
       `https://testnet.snowtrace.io/tx/${txHash}`,
     getLinkForAddress: (address: string): string =>
       `https://testnet.snowtrace.io/address/${address}`,
-    coin: {
+    nativeAsset: {
       symbol: "AVAX",
       superToken: {
+        type: TokenType.NativeAssetSuperToken,
         symbol: "AVAXx",
         address: "0x5735c32c38f5af0fb04a7c77c832ba4d7abffec8",
         name: "Super AVAX",
@@ -246,6 +282,8 @@ export const networks: Network[] = [
     slugName: "optimism-mainnet",
     chainId: 10,
     isTestnet: false,
+    bufferTimeInMinutes: 240,
+    icon: "/icons/network/optimism.svg",
     rpcUrl: `https://rpc-endpoints.superfluid.dev/optimism-mainnet`,
     subgraphUrl:
       "https://api.thegraph.com/subgraphs/name/superfluid-finance/protocol-v1-optimism-mainnet",
@@ -253,9 +291,10 @@ export const networks: Network[] = [
       `https://optimistic.etherscan.io/tx/${txHash}`,
     getLinkForAddress: (address: string): string =>
       `https://optimistic.etherscan.io/address/${address}`,
-    coin: {
+    nativeAsset: {
       symbol: "ETH",
       superToken: {
+        type: TokenType.NativeAssetSuperToken,
         symbol: "ETHx",
         address: "0x4ac8bd1bdae47beef2d1c6aa62229509b962aa0d",
         name: "Super ETH",
@@ -267,7 +306,8 @@ export const networks: Network[] = [
     slugName: "arbitrum-one",
     chainId: 42161,
     isTestnet: false,
-    icon: "/icons/network/arbitrum.jpg",
+    bufferTimeInMinutes: 240,
+    icon: "/icons/network/arbitrum.svg",
     rpcUrl: "https://rpc-endpoints.superfluid.dev/arbitrum-one",
     subgraphUrl:
       "https://api.thegraph.com/subgraphs/name/superfluid-finance/protocol-v1-arbitrum-one",
@@ -275,9 +315,10 @@ export const networks: Network[] = [
       `https://arbiscan.io/tx/${txHash}`,
     getLinkForAddress: (address: string): string =>
       `https://arbiscan.io/address/${address}`,
-    coin: {
+    nativeAsset: {
       symbol: "ETH",
       superToken: {
+        type: TokenType.NativeAssetSuperToken,
         symbol: "ETHx",
         address: "0xe6c8d111337d0052b9d88bf5d7d55b7f8385acd3",
         name: "Super ETH",
@@ -287,12 +328,13 @@ export const networks: Network[] = [
 ];
 
 export const getNetworkDefaultTokenPair = memoize(
-  (network: Network): WrappedSuperTokenPair => ({
-    superToken: network.coin.superToken,
+  (network: Network): SuperTokenPair => ({
+    superToken: network.nativeAsset.superToken,
     underlyingToken: {
-      address: "coin",
+      type: TokenType.NativeAssetUnderlyingToken,
+      address: NATIVE_ASSET_ADDRESS,
       name: `${network.displayName} Native Asset`,
-      symbol: network.coin.symbol,
+      symbol: network.nativeAsset.symbol,
     },
   })
 );
@@ -302,6 +344,7 @@ export const networksByName = new Map(
 );
 
 export const networksByChainId = new Map(networks.map((x) => [x.chainId, x]));
+export const networksBySlug = new Map(networks.map((x) => [x.slugName, x]));
 
 export const mainNetworks = networks.filter((network) => !network.isTestnet);
 export const testNetworks = networks.filter((network) => network.isTestnet);
