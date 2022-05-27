@@ -1,27 +1,27 @@
 import { Badge, IconButton } from "@mui/material";
-import { useWalletContext } from "../wallet/WalletContext";
-import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
 import { useTransactionDrawerContext } from "../transactionDrawer/TransactionDrawerContext";
 import { memo } from "react";
 import {
   pendingTransactionsSelector,
-  useWalletTransactionsSelector,
-} from "../wallet/useWalletTransactions";
+  useAccountTransactionsSelector,
+} from "../wallet/useAccountTransactions";
 import NotificationsIcon from "@mui/icons-material/Notifications";
+import { useAccount } from "wagmi";
 
 export default memo(function TransactionBell() {
-  const { walletAddress } = useWalletContext();
+  const { data: account } = useAccount();
+
   const { transactionDrawerOpen, setTransactionDrawerOpen } =
     useTransactionDrawerContext();
 
-  const pendingTransactions = useWalletTransactionsSelector(
+  const pendingTransactions = useAccountTransactionsSelector(
     pendingTransactionsSelector
   );
 
   return (
     <IconButton
       sx={{
-        ...(walletAddress ? {} : { display: "none" }),
+        ...(account ? {} : { display: "none" }),
       }}
       edge="end"
       onClick={() => setTransactionDrawerOpen(!transactionDrawerOpen)}
