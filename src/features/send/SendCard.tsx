@@ -279,7 +279,7 @@ export default memo(function SendCard(props: {
                   passHref
                 >
                   <Tooltip title="Wrap">
-                    <IconButton>
+                    <IconButton color="inherit">
                       <AddCircleOutline />
                     </IconButton>
                   </Tooltip>
