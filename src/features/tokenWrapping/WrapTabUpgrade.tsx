@@ -37,6 +37,7 @@ import { WrappingForm, ValidWrappingForm } from "./WrappingFormProvider";
 import { Controller, useFormContext } from "react-hook-form";
 import { parseEther } from "ethers/lib/utils";
 import { ErrorMessage } from "@hookform/error-message";
+import { parseEtherOrZero } from "../../utils/tokenUtils";
 
 export const WrapTabUpgrade: FC = () => {
   const theme = useTheme();
@@ -73,7 +74,7 @@ export const WrapTabUpgrade: FC = () => {
   );
 
   useEffect(() => {
-    setAmountWei(ethers.utils.parseEther(Number(amount) ? amount : "0"));
+    setAmountWei(parseEtherOrZero(amount));
   }, [amount]);
 
   const isUnderlyingBlockchainNativeAsset =
