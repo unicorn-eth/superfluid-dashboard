@@ -15,7 +15,6 @@ import {
   useTheme,
 } from "@mui/material";
 import { format } from "date-fns";
-import { BigNumber } from "ethers";
 import Error from "next/error";
 import Image from "next/image";
 import { useRouter } from "next/router";
@@ -31,12 +30,13 @@ import { UnitOfTime } from "../../features/send/FlowRateInput";
 import EtherFormatted from "../../features/token/EtherFormatted";
 import FlowingBalance from "../../features/token/FlowingBalance";
 import TokenIcon from "../../features/token/TokenIcon";
-import withPathNetwork, { NetworkPage } from "../../hoc/withPathNetwork";
 import shortenAddress from "../../utils/shortenAddress";
 import {
   calculateBuffer,
   calculateMaybeCriticalAtTimestamp,
 } from "../../utils/tokenUtils";
+import withPathNetwork, { NetworkPage } from "../../hoc/withPathNetwork";
+import { BigNumber } from "ethers";
 
 interface OverviewItemProps {
   label: string;
@@ -79,12 +79,11 @@ const Stream: FC<NetworkPage> = ({ network }) => {
     } = tokenSnapshotQuery.data;
 
     return new Date(
-      calculateMaybeCriticalAtTimestamp(
-        BigNumber.from(snapshotUpdatedAtTimestamp),
-        BigNumber.from(balanceUntilUpdatedAt),
-        BigNumber.from(0),
-        BigNumber.from(totalNetFlowRate)
-      ).toNumber() * 1000
+      calculateMaybeCriticalAtTimestamp({
+        updatedAtTimestamp: snapshotUpdatedAtTimestamp,
+        balanceUntilUpdatedAtWei: balanceUntilUpdatedAt,
+        totalNetFlowRateWei: totalNetFlowRate
+      }).toNumber() * 1000
     );
   }, [tokenSnapshotQuery.data]);
 

@@ -1,21 +1,14 @@
-import { Button, Card, Stack } from "@mui/material";
+import { ErrorMessage } from "@hookform/error-message";
+import { Alert, Button, Card, Stack } from "@mui/material";
 import { useRouter } from "next/router";
 import { memo } from "react";
-import {
-  SuperTokenDowngradeRestoration,
-  SuperTokenUpgradeRestoration,
-} from "../transactionRestoration/transactionRestorations";
 import { WrapTabDowngrade } from "./WrapTabDowngrade";
 import { WrapTabUpgrade } from "./WrapTabUpgrade";
 
 export default memo(function WrapCard({
   tabValue,
-  upgradeRestoration,
-  downgradeRestoration,
 }: {
   tabValue: "upgrade" | "downgrade";
-  upgradeRestoration?: SuperTokenUpgradeRestoration;
-  downgradeRestoration?: SuperTokenDowngradeRestoration;
 }) {
   const router = useRouter();
 
@@ -51,14 +44,18 @@ export default memo(function WrapCard({
           Unwrap
         </Button>
       </Stack>
-
-      {tabValue === "upgrade" && (
-        <WrapTabUpgrade restoration={upgradeRestoration}></WrapTabUpgrade>
-      )}
-
-      {tabValue === "downgrade" && (
-        <WrapTabDowngrade restoration={downgradeRestoration} />
-      )}
+      <ErrorMessage
+        name="data"
+        render={({ message }) =>
+          !!message && (
+            <Alert severity="error" sx={{ mb: 1 }}>
+              {message}
+            </Alert>
+          )
+        }
+      />
+      {tabValue === "upgrade" && <WrapTabUpgrade />}
+      {tabValue === "downgrade" && <WrapTabDowngrade />}
     </Card>
   );
 });

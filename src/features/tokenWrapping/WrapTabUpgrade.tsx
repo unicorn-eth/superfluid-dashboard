@@ -9,9 +9,9 @@ import { useExpectedNetwork } from "../network/ExpectedNetworkContext";
 import { BigNumber, ethers } from "ethers";
 import { rpcApi, subgraphApi } from "../redux/store";
 import {
+  Alert,
   Avatar,
   Button,
-  DialogActions,
   Input,
   Paper,
   Stack,
@@ -24,7 +24,6 @@ import TokenIcon from "../token/TokenIcon";
 import { TransactionButton } from "../transactions/TransactionButton";
 import { BalanceSuperToken } from "./BalanceSuperToken";
 import { BalanceUnderlyingToken } from "./BalanceUnderlyingToken";
-import { useSelectedTokenContext } from "./SelectedTokenPairContext";
 import { TokenDialogButton } from "./TokenDialogButton";
 import { NATIVE_ASSET_ADDRESS } from "../redux/endpoints/tokenTypes";
 import { useRouter } from "next/router";
@@ -34,18 +33,41 @@ import {
   TransactionDialogButton,
 } from "../transactions/TransactionDialog";
 import { useVisibleAddress } from "../wallet/VisibleAddressContext";
+import { WrappingForm, ValidWrappingForm } from "./WrappingFormProvider";
+import { Controller, useFormContext } from "react-hook-form";
+import { parseEther } from "ethers/lib/utils";
+import { ErrorMessage } from "@hookform/error-message";
 
-export const WrapTabUpgrade: FC<{
-  restoration: SuperTokenUpgradeRestoration | undefined;
-}> = ({ restoration }) => {
+export const WrapTabUpgrade: FC = () => {
   const theme = useTheme();
   const { network } = useExpectedNetwork();
   const router = useRouter();
   const { visibleAddress } = useVisibleAddress();
-  const { selectedTokenPair, setSelectedTokenPair } = useSelectedTokenContext();
   const { setTransactionDrawerOpen } = useTransactionDrawerContext();
 
-  const [amount, setAmount] = useState<string>("");
+  const {
+    watch,
+    control,
+    reset: resetForm,
+    formState,
+    getValues,
+    setValue
+  } = useFormContext<WrappingForm>();
+
+  // The reason to set the type and clear errors is that a single form context is used both for wrapping and unwrapping.
+  useEffect(() => {
+    setValue("type", RestorationType.Upgrade, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: true,
+    });
+  }, []);
+
+  const [selectedTokenPair, amount] = watch([
+    "data.tokenUpgrade",
+    "data.amountEther",
+  ]);
+
   const [amountWei, setAmountWei] = useState<BigNumber>(
     ethers.BigNumber.from(0)
   );
@@ -54,18 +76,10 @@ export const WrapTabUpgrade: FC<{
     setAmountWei(ethers.utils.parseEther(Number(amount) ? amount : "0"));
   }, [amount]);
 
-  useEffect(() => {
-    if (restoration) {
-      setSelectedTokenPair(restoration.tokenUpgrade);
-      setAmount(ethers.utils.formatEther(restoration.amountWei));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restoration]);
-
   const isUnderlyingBlockchainNativeAsset =
     selectedTokenPair?.underlyingToken.address === NATIVE_ASSET_ADDRESS;
 
-  const allowanceQuery = rpcApi.useSuperTokenUpgradeAllowanceQuery(
+  const { data: _discard, ...allowanceQuery } = rpcApi.useSuperTokenUpgradeAllowanceQuery(
     selectedTokenPair && !isUnderlyingBlockchainNativeAsset && visibleAddress
       ? {
           chainId: network.id,
@@ -75,8 +89,8 @@ export const WrapTabUpgrade: FC<{
       : skipToken
   );
 
-  const currentAllowance = allowanceQuery.data
-    ? ethers.BigNumber.from(allowanceQuery.data)
+  const currentAllowance = allowanceQuery.currentData
+    ? ethers.BigNumber.from(allowanceQuery.currentData)
     : null;
 
   const missingAllowance = currentAllowance
@@ -97,7 +111,7 @@ export const WrapTabUpgrade: FC<{
   );
 
   const isUpgradeDisabled =
-    !selectedTokenPair || amountWei.isZero() || !!isApproveAllowanceVisible;
+    formState.isValidating || !formState.isValid || !!isApproveAllowanceVisible;
 
   const amountInputRef = useRef<HTMLInputElement>(undefined!);
 
@@ -118,39 +132,53 @@ export const WrapTabUpgrade: FC<{
         sx={{ px: 2.5, py: 1.5 }}
       >
         <Stack direction="row" spacing={2}>
-          <Input
-            data-cy={"wrap-input"}
-            fullWidth
-            disableUnderline
-            disabled={!selectedTokenPair}
-            placeholder="0.0"
-            inputRef={amountInputRef}
-            value={amount}
-            type="number"
-            onChange={(e) => setAmount(e.currentTarget.value)}
-            inputProps={{
-              sx: {
-                ...theme.typography.largeInput,
-                p: 0,
-              },
-            }}
+          <Controller
+            control={control}
+            name="data.amountEther"
+            render={({ field: { onChange, onBlur } }) => (
+              <Input
+                data-cy={"wrap-input"}
+                fullWidth
+                disableUnderline
+                disabled={!selectedTokenPair}
+                placeholder="0.0"
+                inputRef={amountInputRef}
+                value={amount}
+                type="number"
+                onChange={onChange}
+                onBlur={onBlur}
+                inputProps={{
+                  sx: {
+                    ...theme.typography.largeInput,
+                    p: 0,
+                  },
+                }}
+              />
+            )}
           />
-          <TokenDialogButton
-            token={selectedTokenPair?.underlyingToken}
-            tokenSelection={{
-              tokenPairsQuery: {
-                data: tokenPairsQuery.data?.map((x) => x.underlyingToken),
-                isUninitialized: tokenPairsQuery.isUninitialized,
-                isLoading: tokenPairsQuery.isLoading,
-              },
-            }}
-            onTokenSelect={(token) =>
-              setSelectedTokenPair(
-                tokenPairsQuery?.data?.find(
-                  (x) => x.underlyingToken.address === token.address
-                )
-              )
-            }
+          <Controller
+            control={control}
+            name="data.tokenUpgrade"
+            render={({ field: { onChange, onBlur } }) => (
+              <TokenDialogButton
+                token={selectedTokenPair?.underlyingToken}
+                tokenSelection={{
+                  tokenPairsQuery: {
+                    data: tokenPairsQuery.data?.map((x) => x.underlyingToken),
+                    isUninitialized: tokenPairsQuery.isUninitialized,
+                    isLoading: tokenPairsQuery.isLoading,
+                  },
+                }}
+                onTokenSelect={(token) =>
+                  onChange(
+                    tokenPairsQuery?.data?.find(
+                      (x) => x.underlyingToken.address === token.address
+                    )
+                  )
+                }
+                onBlur={onBlur}
+              />
+            )}
           />
         </Stack>
         {selectedTokenPair && visibleAddress && (
@@ -283,30 +311,36 @@ export const WrapTabUpgrade: FC<{
           disabled={isUpgradeDisabled}
           mutationResult={upgradeResult}
           onClick={(setTransactionDialogContent, closeTransactionDialog) => {
-            if (isUpgradeDisabled) {
+            if (!formState.isValid) {
               throw Error(
-                "This should never happen because the token and amount must be selected for the button to be active."
+                `This should never happen. Form state: ${JSON.stringify(
+                  formState,
+                  null,
+                  2
+                )}`
               );
             }
+
+            const { data: formData } = getValues() as ValidWrappingForm;
 
             const restoration: SuperTokenUpgradeRestoration = {
               type: RestorationType.Upgrade,
               chainId: network.id,
               tokenUpgrade: selectedTokenPair,
-              amountWei: amountWei.toString(),
+              amountWei: parseEther(formData.amountEther).toString(),
             };
 
             upgradeTrigger({
               chainId: network.id,
-              amountWei: amountWei.toString(),
-              superTokenAddress: selectedTokenPair.superToken.address,
+              amountWei: parseEther(formData.amountEther).toString(),
+              superTokenAddress: formData.tokenUpgrade.superToken.address,
               waitForConfirmation: true,
               transactionExtraData: {
                 restoration,
               },
             })
               .unwrap()
-              .then(() => setAmount(""));
+              .then(() => resetForm());
 
             setTransactionDialogContent({
               label: <UpgradePreview restoration={restoration} />,

@@ -1,30 +1,37 @@
 import { SuperTokenPair, UnderlyingToken, SuperTokenMinimal } from "../redux/endpoints/tokenTypes";
 import {DisplayAddress} from "../send/DisplayAddressChip";
-import {FlowRateWithTime} from "../send/FlowRateInput";
+import {FlowRateWei} from "../send/FlowRateInput";
 
 export enum RestorationType {
   Downgrade = 1,
   Upgrade = 2,
   Approve = 3,
-  SendStream = 4
+  SendStream = 4,
+  ModifyStream = 5
+}
+
+export const formRestorationOptions = {
+  shouldValidate: false,
+  shouldDirty: true,
+  shouldTouch: true,
 }
 
 export interface TransactionRestoration {
   type: RestorationType;
 }
 
-export interface SuperTokenDowngradeRestoration extends TransactionRestoration {
-  type: RestorationType.Downgrade;
+interface WrappingRestoration extends TransactionRestoration{
   chainId: number;
   tokenUpgrade: SuperTokenPair;
   amountWei: string;
 }
 
-export interface SuperTokenUpgradeRestoration extends TransactionRestoration {
+export interface SuperTokenDowngradeRestoration extends WrappingRestoration {
+  type: RestorationType.Downgrade;
+}
+
+export interface SuperTokenUpgradeRestoration extends WrappingRestoration {
   type: RestorationType.Upgrade;
-  chainId: number;
-  tokenUpgrade: SuperTokenPair;
-  amountWei: string;
 }
 
 export interface ApproveAllowanceRestoration extends TransactionRestoration {
@@ -34,10 +41,17 @@ export interface ApproveAllowanceRestoration extends TransactionRestoration {
   amountWei: string;
 }
 
-export interface SendStreamRestoration extends TransactionRestoration {
-  type: RestorationType.SendStream;
+interface UpsertStreamRestoration extends TransactionRestoration {
   chainId: number;
   token: SuperTokenMinimal;
   receiver: DisplayAddress;
-  flowRate: FlowRateWithTime;
+  flowRate: FlowRateWei;
+}
+
+export interface SendStreamRestoration extends UpsertStreamRestoration {
+  type: RestorationType.SendStream;
+}
+
+export interface ModifyStreamRestoration extends UpsertStreamRestoration {
+  type: RestorationType.ModifyStream;
 }
