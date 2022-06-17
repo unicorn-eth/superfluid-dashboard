@@ -2,7 +2,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import DateRangeIcon from "@mui/icons-material/DateRange";
 import SearchIcon from "@mui/icons-material/Search";
 import {
-  Avatar,
   Box,
   Button,
   Container,
@@ -20,7 +19,8 @@ import groupBy from "lodash/fp/groupBy";
 import orderBy from "lodash/fp/orderBy";
 import { NextPage } from "next";
 import { MouseEvent, useCallback, useEffect, useMemo, useState } from "react";
-import Blockies from "react-blockies";
+import AddressAvatar from "../components/AddressAvatar/AddressAvatar";
+import AddressName from "../components/AddressName/AddressName";
 import ActivityRow from "../features/activityHistory/ActivityRow";
 import ActivityTypeFilter, {
   ActivityType,
@@ -41,11 +41,9 @@ import NetworkSelectionFilter, {
 } from "../features/network/NetworkSelectionFilter";
 import { OpenIcon } from "../features/network/SelectNetwork";
 import { subgraphApi } from "../features/redux/store";
-import AddressSearchDialog from "../features/send/AddressSearchDialog";
-import { DisplayAddress } from "../features/send/DisplayAddressChip";
+import AddressSearchDialog from "../components/AddressSearchDialog/AddressSearchDialog";
 import { useVisibleAddress } from "../features/wallet/VisibleAddressContext";
 import { Activity, mapActivitiesFromEvents } from "../utils/activityUtils";
-import shortenAddress from "../utils/shortenAddress";
 
 const History: NextPage = () => {
   const dateNow = useMemo(() => new Date(), []);
@@ -77,9 +75,7 @@ const History: NextPage = () => {
 
   const [addressSearchOpen, setAddressSearchOpen] = useState(false);
 
-  const [addressSearch, setAddressSearch] = useState<DisplayAddress | null>(
-    null
-  );
+  const [searchedAddress, setAddressSearch] = useState<string | null>(null);
 
   const [eventsQueryTrigger] = subgraphApi.useLazyEventsQuery();
 
@@ -98,10 +94,10 @@ const History: NextPage = () => {
             {
               chainId: network.id,
               filter: {
-                addresses_contains: addressSearch
+                addresses_contains: searchedAddress
                   ? [
                       visibleAddress.toLowerCase(),
-                      addressSearch.hash.toLowerCase(),
+                      searchedAddress.toLowerCase(),
                     ]
                   : [visibleAddress.toLowerCase()],
                 timestamp_gte: Math.floor(
@@ -140,9 +136,9 @@ const History: NextPage = () => {
       setActivities([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visibleAddress, activeNetworks, startDate, endDate, addressSearch]);
+  }, [visibleAddress, activeNetworks, startDate, endDate, searchedAddress]);
 
-  const onAddressSearchChange = (address: DisplayAddress) => {
+  const onAddressSearchChange = (address: string) => {
     setAddressSearch(address);
     closeAddressSearchDialog();
   };
@@ -226,13 +222,16 @@ const History: NextPage = () => {
               color="secondary"
               size="xl"
               startIcon={
-                addressSearch ? (
-                  <Avatar
-                    variant="rounded"
-                    sx={{ width: "24px", height: "24px" }}
-                  >
-                    <Blockies seed={addressSearch.hash} size={12} scale={2} />
-                  </Avatar>
+                searchedAddress ? (
+                  <AddressAvatar
+                    address={searchedAddress}
+                    AvatarProps={{
+                      sx: {
+                        width: "24px",
+                        height: "24px",
+                      },
+                    }}
+                  />
                 ) : (
                   <SearchIcon />
                 )
@@ -240,7 +239,7 @@ const History: NextPage = () => {
               onClick={openAddressSearchDialog}
               sx={{ maxWidth: "400px", justifyContent: "flex-start" }}
             >
-              {addressSearch ? (
+              {searchedAddress ? (
                 <Stack
                   direction="row"
                   alignItems="center"
@@ -248,8 +247,7 @@ const History: NextPage = () => {
                   flex={1}
                 >
                   <Typography variant="body1">
-                    {addressSearch.name ||
-                      shortenAddress(addressSearch.hash, 12)}
+                    <AddressName address={searchedAddress} />
                   </Typography>
                   <IconButton
                     onClick={(e: MouseEvent<HTMLButtonElement>) => {
@@ -267,11 +265,12 @@ const History: NextPage = () => {
               )}
             </Button>
             <AddressSearchDialog
+              title="Select address to filter by"
               open={addressSearchOpen}
               onClose={closeAddressSearchDialog}
               onSelectAddress={onAddressSearchChange}
+              index={null}
             />
-
             <Button
               variant="outlined"
               color="secondary"

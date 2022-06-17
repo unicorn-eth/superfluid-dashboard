@@ -1,8 +1,12 @@
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import { Stack, styled } from "@mui/material";
+import {
+  Stack,
+  styled,
+} from "@mui/material";
 import { memo, MouseEvent, useState } from "react";
-import AddressSearchDialog from "./AddressSearchDialog";
-import DisplayAddressChip, { DisplayAddress } from "./DisplayAddressChip";
+import AddressSearchDialog from "../../components/AddressSearchDialog/AddressSearchDialog";
+import AddressSearchIndex from "./AddressSearchIndex";
+import DisplayAddressChip from "./DisplayAddressChip";
 
 interface AddressButtonProps {
   hasAddress?: boolean;
@@ -27,15 +31,21 @@ export default memo(function AddressSearch({
   address,
   onBlur = () => {},
 }: {
-  address: DisplayAddress | null;
-  onChange: (address: DisplayAddress | null) => void; // TODO(KK): better name
-  onBlur: () => void;
+  address: string | null;
+  onChange: (address: string | null) => void; // TODO(KK): better name
+  onBlur?: () => void;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const onOpenDialog = (event: MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
     setDialogOpen(true);
+  };
+
+  const onSelectAddress = (address: string) => {
+    setDialogOpen(false);
+    onChange(address);
+    onBlur();
   };
 
   return (
@@ -50,9 +60,7 @@ export default memo(function AddressSearch({
       >
         {address ? (
           <DisplayAddressChip
-            hash={address.hash}
-            name={address.name}
-            tryGetEns={false}
+            address={address}
             ChipProps={{
               onDelete: () => onChange(null),
               sx: { flex: 1, background: "transparent" },
@@ -65,18 +73,15 @@ export default memo(function AddressSearch({
           </>
         )}
       </AddressButton>
-
       <AddressSearchDialog
+        title={"Select a receiver"}
+        index={<AddressSearchIndex onSelectAddress={onSelectAddress} />}
         open={dialogOpen}
         onClose={() => {
           setDialogOpen(false);
           onBlur();
         }}
-        onSelectAddress={(address) => {
-          setDialogOpen(false);
-          onChange(address);
-          onBlur();
-        }}
+        onSelectAddress={onSelectAddress}
       />
     </>
   );
