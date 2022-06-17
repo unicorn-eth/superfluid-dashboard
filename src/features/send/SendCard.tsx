@@ -3,6 +3,7 @@ import AddCircleOutline from "@mui/icons-material/AddCircleOutline";
 import {
   Alert,
   Box,
+  Button,
   Card,
   Checkbox,
   Divider,
@@ -143,9 +144,14 @@ export default memo(function SendCard() {
       elevation={1}
     >
       <Stack spacing={4}>
-        <Typography variant="h4" component="h1">
+        <Button
+          color="primary"
+          variant="textContained"
+          size="large"
+          sx={{ alignSelf: "flex-start", pointerEvents: "none" }}
+        >
           {activeFlow ? "Modify Stream" : "Send Stream"}
-        </Typography>
+        </Button>
 
         <ErrorMessage
           name="data"
@@ -169,6 +175,7 @@ export default memo(function SendCard() {
                   address={receiver}
                   onChange={onChange}
                   onBlur={onBlur}
+                  ButtonProps={{ fullWidth: true }}
                 />
               )}
             />
@@ -196,6 +203,7 @@ export default memo(function SendCard() {
                     }}
                     onTokenSelect={onChange}
                     onBlur={onBlur}
+                    ButtonProps={{ variant: "input" }}
                   />
                 )}
               />
@@ -284,12 +292,18 @@ export default memo(function SendCard() {
           </Alert>
 
           {selectedToken && visibleAddress && (
-            <Stack direction="row" alignItems="center" justifyContent="center">
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="center"
+              gap={1}
+            >
               <BalanceSuperToken
                 data-cy={"balance"}
                 chainId={network.id}
                 accountAddress={visibleAddress}
                 tokenAddress={selectedToken.address}
+                TypographyProps={{ variant: "h7mono" }}
               />
 
               {isWrappableSuperToken && (
@@ -297,8 +311,12 @@ export default memo(function SendCard() {
                   href={`/wrap?upgrade&token=${selectedToken.address}&network=${network.slugName}`}
                   passHref
                 >
-                  <Tooltip title="Wrap">
-                    <IconButton data-cy={"balance-wrap-button"} color="inherit">
+                  <Tooltip title="Wrap more">
+                    <IconButton
+                      data-cy={"balance-wrap-button"}
+                      color="primary"
+                      size="small"
+                    >
                       <AddCircleOutline />
                     </IconButton>
                   </Tooltip>

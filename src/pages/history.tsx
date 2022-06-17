@@ -1,11 +1,8 @@
-import CloseIcon from "@mui/icons-material/Close";
 import DateRangeIcon from "@mui/icons-material/DateRange";
-import SearchIcon from "@mui/icons-material/Search";
 import {
   Box,
   Button,
   Container,
-  IconButton,
   Paper,
   Stack,
   Table,
@@ -19,8 +16,6 @@ import groupBy from "lodash/fp/groupBy";
 import orderBy from "lodash/fp/orderBy";
 import { NextPage } from "next";
 import { MouseEvent, useCallback, useEffect, useMemo, useState } from "react";
-import AddressAvatar from "../components/AddressAvatar/AddressAvatar";
-import AddressName from "../components/AddressName/AddressName";
 import ActivityRow from "../features/activityHistory/ActivityRow";
 import ActivityTypeFilter, {
   ActivityType,
@@ -41,7 +36,7 @@ import NetworkSelectionFilter, {
 } from "../features/network/NetworkSelectionFilter";
 import { OpenIcon } from "../features/network/SelectNetwork";
 import { subgraphApi } from "../features/redux/store";
-import AddressSearchDialog from "../components/AddressSearchDialog/AddressSearchDialog";
+import AddressSearch from "../features/send/AddressSearch";
 import { useVisibleAddress } from "../features/wallet/VisibleAddressContext";
 import { Activity, mapActivitiesFromEvents } from "../utils/activityUtils";
 
@@ -217,59 +212,24 @@ const History: NextPage = () => {
 
         <Stack gap={2.5}>
           <Stack direction="row" justifyContent="space-between">
-            <Button
-              variant="outlined"
-              color="secondary"
-              size="xl"
-              startIcon={
-                searchedAddress ? (
-                  <AddressAvatar
-                    address={searchedAddress}
-                    AvatarProps={{
-                      sx: {
-                        width: "24px",
-                        height: "24px",
-                      },
-                    }}
-                  />
-                ) : (
-                  <SearchIcon />
-                )
-              }
-              onClick={openAddressSearchDialog}
-              sx={{ maxWidth: "400px", justifyContent: "flex-start" }}
-            >
-              {searchedAddress ? (
-                <Stack
-                  direction="row"
-                  alignItems="center"
-                  justifyContent="space-between"
-                  flex={1}
-                >
-                  <Typography variant="body1">
-                    <AddressName address={searchedAddress} />
-                  </Typography>
-                  <IconButton
-                    onClick={(e: MouseEvent<HTMLButtonElement>) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      setAddressSearch(null);
-                    }}
-                    sx={{ m: -1 }}
-                  >
-                    <CloseIcon />
-                  </IconButton>
-                </Stack>
-              ) : (
-                <>Filter by address</>
-              )}
-            </Button>
-            <AddressSearchDialog
-              title="Select address to filter by"
-              open={addressSearchOpen}
-              onClose={closeAddressSearchDialog}
-              onSelectAddress={onAddressSearchChange}
-              index={null}
+            <AddressSearch
+              address={searchedAddress}
+              placeholder="Filter by public address or ENS"
+              onChange={setAddressSearch}
+              addressLength="medium"
+              ButtonProps={{
+                variant: "outlined",
+                color: "secondary",
+                size: "large",
+                sx: {
+                  width: "420px",
+                  height: "52px",
+                  justifyContent: "flex-start",
+                  ".MuiButton-endIcon": {
+                    marginLeft: "auto",
+                  },
+                },
+              }}
             />
             <Button
               variant="outlined"

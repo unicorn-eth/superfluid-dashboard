@@ -1,45 +1,41 @@
+import CloseIcon from "@mui/icons-material/Close";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import {
-  Stack,
-  styled,
-} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import { Button, ButtonProps, IconButton } from "@mui/material";
 import { memo, MouseEvent, useState } from "react";
+import AddressAvatar from "../../components/AddressAvatar/AddressAvatar";
+import AddressName, {
+  AddressNameProps,
+} from "../../components/AddressName/AddressName";
 import AddressSearchDialog from "../../components/AddressSearchDialog/AddressSearchDialog";
 import AddressSearchIndex from "./AddressSearchIndex";
-import DisplayAddressChip from "./DisplayAddressChip";
-
-interface AddressButtonProps {
-  hasAddress?: boolean;
-}
-
-const AddressButton = styled(Stack)<AddressButtonProps>(
-  ({ hasAddress, theme }) => ({
-    minHeight: 54,
-    border: `1px solid ${theme.palette.other.outline}`,
-    borderRadius: "10px",
-    padding: `0 ${hasAddress ? theme.spacing(1.75) : 0}`,
-    lineHeight: "54px",
-    cursor: "pointer",
-    color: hasAddress
-      ? theme.palette.text.secondary
-      : theme.palette.text.primary,
-  })
-);
 
 export default memo(function AddressSearch({
-  onChange,
   address,
+  onChange,
+  placeholder = "Public Address or ENS",
+  addressLength = "long",
+  ButtonProps = {},
   onBlur = () => {},
 }: {
   address: string | null;
   onChange: (address: string | null) => void; // TODO(KK): better name
+  placeholder?: string;
+  addressLength?: AddressNameProps["length"];
+  ButtonProps?: ButtonProps;
   onBlur?: () => void;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const onOpenDialog = (event: MouseEvent<HTMLDivElement>) => {
+  const onOpenDialog = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     setDialogOpen(true);
+  };
+
+  const clearSearch = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    event.preventDefault();
+    onChange(null);
   };
 
   const onSelectAddress = (address: string) => {
@@ -50,29 +46,35 @@ export default memo(function AddressSearch({
 
   return (
     <>
-      <AddressButton
+      <Button
         data-cy={"address-button"}
-        hasAddress={!address}
-        direction="row"
-        alignItems={address ? "stretch" : "center"}
-        justifyContent="space-between"
+        variant="input"
         onClick={onOpenDialog}
+        startIcon={
+          address ? <AddressAvatar address={address} /> : <SearchIcon />
+        }
+        endIcon={
+          address ? (
+            <IconButton
+              onClick={clearSearch}
+              color="inherit"
+              sx={{ marginLeft: "auto", marginRight: "-6px" }}
+            >
+              <CloseIcon sx={{ fontSize: "22px" }} />
+            </IconButton>
+          ) : (
+            <KeyboardArrowDownIcon />
+          )
+        }
+        {...ButtonProps}
       >
         {address ? (
-          <DisplayAddressChip
-            address={address}
-            ChipProps={{
-              onDelete: () => onChange(null),
-              sx: { flex: 1, background: "transparent" },
-            }}
-          />
+          <AddressName address={address} length={addressLength} />
         ) : (
-          <>
-            <span>Public Address or ENS</span>
-            <KeyboardArrowDownIcon />
-          </>
+          placeholder
         )}
-      </AddressButton>
+      </Button>
+
       <AddressSearchDialog
         title={"Select a receiver"}
         index={<AddressSearchIndex onSelectAddress={onSelectAddress} />}

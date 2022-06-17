@@ -1,43 +1,32 @@
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { Button, Input, Stack, Typography, useTheme } from "@mui/material";
+import { skipToken } from "@reduxjs/toolkit/query";
+import { BigNumber, ethers } from "ethers";
+import { parseEther } from "ethers/lib/utils";
+import { useRouter } from "next/router";
+import { FC, useEffect, useRef, useState } from "react";
+import { Controller, useFormContext } from "react-hook-form";
+import { parseEtherOrZero } from "../../utils/tokenUtils";
+import { useExpectedNetwork } from "../network/ExpectedNetworkContext";
+import { NATIVE_ASSET_ADDRESS } from "../redux/endpoints/tokenTypes";
+import { rpcApi, subgraphApi } from "../redux/store";
+import TokenIcon from "../token/TokenIcon";
+import { useTransactionDrawerContext } from "../transactionDrawer/TransactionDrawerContext";
 import {
   ApproveAllowanceRestoration,
-  SuperTokenUpgradeRestoration,
   RestorationType,
+  SuperTokenUpgradeRestoration,
 } from "../transactionRestoration/transactionRestorations";
-import { useExpectedNetwork } from "../network/ExpectedNetworkContext";
-import { BigNumber, ethers } from "ethers";
-import { rpcApi, subgraphApi } from "../redux/store";
-import {
-  Alert,
-  Avatar,
-  Button,
-  Input,
-  Paper,
-  Stack,
-  Typography,
-  useTheme,
-} from "@mui/material";
-import { skipToken } from "@reduxjs/toolkit/query";
-import { FC, useEffect, useRef, useState } from "react";
-import TokenIcon from "../token/TokenIcon";
 import { TransactionButton } from "../transactions/TransactionButton";
-import { BalanceSuperToken } from "./BalanceSuperToken";
-import { BalanceUnderlyingToken } from "./BalanceUnderlyingToken";
-import { TokenDialogButton } from "./TokenDialogButton";
-import { NATIVE_ASSET_ADDRESS } from "../redux/endpoints/tokenTypes";
-import { useRouter } from "next/router";
-import { useTransactionDrawerContext } from "../transactionDrawer/TransactionDrawerContext";
 import {
   TransactionDialogActions,
   TransactionDialogButton,
 } from "../transactions/TransactionDialog";
 import { useVisibleAddress } from "../wallet/VisibleAddressContext";
-import { WrappingForm, ValidWrappingForm } from "./WrappingFormProvider";
-import { Controller, useFormContext } from "react-hook-form";
-import { parseEther } from "ethers/lib/utils";
-import { ErrorMessage } from "@hookform/error-message";
-import { parseEtherOrZero } from "../../utils/tokenUtils";
+import { BalanceSuperToken } from "./BalanceSuperToken";
+import { BalanceUnderlyingToken } from "./BalanceUnderlyingToken";
+import { TokenDialogButton } from "./TokenDialogButton";
+import { ArrowDownIcon, WrapInputCard } from "./WrapCard";
+import { ValidWrappingForm, WrappingForm } from "./WrappingFormProvider";
 
 export const WrapTabUpgrade: FC = () => {
   const theme = useTheme();
@@ -52,7 +41,7 @@ export const WrapTabUpgrade: FC = () => {
     reset: resetForm,
     formState,
     getValues,
-    setValue
+    setValue,
   } = useFormContext<WrappingForm>();
 
   // The reason to set the type and clear errors is that a single form context is used both for wrapping and unwrapping.
@@ -80,15 +69,16 @@ export const WrapTabUpgrade: FC = () => {
   const isUnderlyingBlockchainNativeAsset =
     selectedTokenPair?.underlyingToken.address === NATIVE_ASSET_ADDRESS;
 
-  const { data: _discard, ...allowanceQuery } = rpcApi.useSuperTokenUpgradeAllowanceQuery(
-    selectedTokenPair && !isUnderlyingBlockchainNativeAsset && visibleAddress
-      ? {
-          chainId: network.id,
-          accountAddress: visibleAddress,
-          superTokenAddress: selectedTokenPair.superToken.address,
-        }
-      : skipToken
-  );
+  const { data: _discard, ...allowanceQuery } =
+    rpcApi.useSuperTokenUpgradeAllowanceQuery(
+      selectedTokenPair && !isUnderlyingBlockchainNativeAsset && visibleAddress
+        ? {
+            chainId: network.id,
+            accountAddress: visibleAddress,
+            superTokenAddress: selectedTokenPair.superToken.address,
+          }
+        : skipToken
+    );
 
   const currentAllowance = allowanceQuery.currentData
     ? ethers.BigNumber.from(allowanceQuery.currentData)
@@ -126,12 +116,7 @@ export const WrapTabUpgrade: FC = () => {
 
   return (
     <Stack direction="column" alignItems="center">
-      <Stack
-        variant="outlined"
-        component={Paper}
-        spacing={1}
-        sx={{ px: 2.5, py: 1.5 }}
-      >
+      <WrapInputCard>
         <Stack direction="row" spacing={2}>
           <Controller
             control={control}
@@ -149,11 +134,13 @@ export const WrapTabUpgrade: FC = () => {
                 onChange={onChange}
                 onBlur={onBlur}
                 inputProps={{
+                  min: 0,
                   sx: {
                     ...theme.typography.largeInput,
                     p: 0,
                   },
                 }}
+                sx={{ background: "transparent" }}
               />
             )}
           />
@@ -178,6 +165,10 @@ export const WrapTabUpgrade: FC = () => {
                   )
                 }
                 onBlur={onBlur}
+                ButtonProps={{
+                  variant:
+                    theme.palette.mode === "light" ? "outlined" : "token",
+                }}
               />
             )}
           />
@@ -194,28 +185,12 @@ export const WrapTabUpgrade: FC = () => {
             />
           </Stack>
         )}
-      </Stack>
+      </WrapInputCard>
 
-      <Avatar
-        component={Paper}
-        elevation={1}
-        sx={{
-          width: 30,
-          height: 30,
-          background: theme.palette.background.paper,
-          my: -1,
-        }}
-      >
-        <ArrowDownwardIcon color="primary" fontSize="small" />
-      </Avatar>
+      <ArrowDownIcon />
 
       {selectedTokenPair && (
-        <Stack
-          component={Paper}
-          variant="outlined"
-          spacing={1}
-          sx={{ px: 2.5, py: 1.5 }}
-        >
+        <WrapInputCard>
           <Stack direction="row" spacing={2}>
             <Input
               data-cy={"wrapable-amount"}
@@ -230,9 +205,10 @@ export const WrapTabUpgrade: FC = () => {
                   p: 0,
                 },
               }}
+              sx={{ background: "transparent" }}
             />
             <Button
-              variant="outlined"
+              variant={theme.palette.mode === "light" ? "outlined" : "token"}
               color="secondary"
               startIcon={
                 <TokenIcon
@@ -240,7 +216,7 @@ export const WrapTabUpgrade: FC = () => {
                   size={24}
                 />
               }
-              endIcon={<ExpandMoreIcon />}
+              sx={{ pointerEvents: "none" }}
             >
               {selectedTokenPair.superToken.symbol ?? ""}
             </Button>
@@ -255,11 +231,11 @@ export const WrapTabUpgrade: FC = () => {
                 chainId={network.id}
                 accountAddress={visibleAddress}
                 tokenAddress={selectedTokenPair.superToken.address}
-                typographyProps={{ color: "text.secondary" }}
+                TypographyProps={{ color: "text.secondary" }}
               />
             </Stack>
           )}
-        </Stack>
+        </WrapInputCard>
       )}
 
       {selectedTokenPair && (
