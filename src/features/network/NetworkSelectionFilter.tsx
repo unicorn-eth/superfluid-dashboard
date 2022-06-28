@@ -86,7 +86,7 @@ const NetworkSelectionFilter: FC<NetworkSelectionFilterProps> = ({
       onClose={onClose}
       transformOrigin={{ horizontal: "right", vertical: "top" }}
       anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-      PaperProps={{ sx: { minWidth: 280 }, square: true, elevation: 2 }}
+      PaperProps={{ sx: { minWidth: 280 }, square: true }}
       sx={{ marginTop: theme.spacing(1.5) }}
     >
       <Collapse in={!testnetMode} timeout="auto" unmountOnExit>

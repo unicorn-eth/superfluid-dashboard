@@ -142,7 +142,7 @@ const Token: FC<NetworkPage> = ({ network }) => {
           onBack={handleBack}
         />
 
-        <Card sx={{ px: 4, pt: 3, pb: 2 }}>
+        <Card sx={{ pb: 2 }}>
           <Stack direction="row" justifyContent="space-between" sx={{ mb: 4 }}>
             <Stack gap={0.5}>
               <Typography variant="body1" color="text.secondary">
