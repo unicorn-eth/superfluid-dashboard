@@ -1,7 +1,7 @@
 import { Button, Input, Stack, Typography, useTheme } from "@mui/material";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { BigNumber, ethers } from "ethers";
-import { parseEther } from "ethers/lib/utils";
+import { formatEther, parseEther } from "ethers/lib/utils";
 import { useRouter } from "next/router";
 import { FC, useEffect, useRef, useState } from "react";
 import { Controller, useFormContext } from "react-hook-form";
@@ -41,6 +41,7 @@ export const WrapTabUpgrade: FC = () => {
     watch,
     control,
     reset: resetForm,
+    resetField,
     formState,
     getValues,
     setValue,
@@ -116,6 +117,17 @@ export const WrapTabUpgrade: FC = () => {
     chainId: network.id,
   });
 
+  const { data: _discard2, ...underlyingBalanceQuery } =
+    rpcApi.useUnderlyingBalanceQuery(
+      selectedTokenPair && visibleAddress
+        ? {
+            chainId: network.id,
+            accountAddress: visibleAddress,
+            tokenAddress: selectedTokenPair.underlyingToken.address,
+          }
+        : skipToken
+    );
+
   return (
     <Stack direction="column" alignItems="center">
       <WrapInputCard>
@@ -132,11 +144,11 @@ export const WrapTabUpgrade: FC = () => {
                 placeholder="0.0"
                 inputRef={amountInputRef}
                 value={amount}
-                type="number"
+                type="text"
+                inputMode="decimal"
                 onChange={onChange}
                 onBlur={onBlur}
                 inputProps={{
-                  min: 0,
                   sx: {
                     ...theme.typography.largeInput,
                     p: 0,
@@ -146,6 +158,7 @@ export const WrapTabUpgrade: FC = () => {
               />
             )}
           />
+
           <Controller
             control={control}
             name="data.tokenUpgrade"
@@ -159,13 +172,14 @@ export const WrapTabUpgrade: FC = () => {
                     isLoading: tokenPairsQuery.isLoading,
                   },
                 }}
-                onTokenSelect={(token) =>
-                  onChange(
+                onTokenSelect={(token) => {
+                  resetField("data.amountEther");
+                  return onChange(
                     tokenPairsQuery?.data?.find(
                       (x) => x.underlyingToken.address === token.address
                     )
-                  )
-                }
+                  );
+                }}
                 onBlur={onBlur}
                 ButtonProps={{
                   variant:
@@ -176,7 +190,7 @@ export const WrapTabUpgrade: FC = () => {
           />
         </Stack>
         {selectedTokenPair && visibleAddress && (
-          <Stack direction="row" justifyContent="flex-end">
+          <Stack direction="row" justifyContent="flex-end" gap={0.5}>
             {/* <Typography variant="body2" color="text.secondary">
             ${Number(amount || 0).toFixed(2)}
           </Typography> */}
@@ -185,6 +199,26 @@ export const WrapTabUpgrade: FC = () => {
               accountAddress={visibleAddress}
               tokenAddress={selectedTokenPair.underlyingToken.address}
             />
+            {underlyingBalanceQuery.currentData && (
+              <Controller
+                control={control}
+                name="data.amountEther"
+                render={({ field: { onChange, onBlur } }) => (
+                  <Button
+                    variant="textContained"
+                    size="xxs"
+                    onClick={() => {
+                      return onChange(
+                        formatEther(underlyingBalanceQuery.currentData!.balance)
+                      );
+                    }}
+                    onBlur={onBlur}
+                  >
+                    MAX
+                  </Button>
+                )}
+              />
+            )}
           </Stack>
         )}
       </WrapInputCard>
@@ -279,7 +313,7 @@ export const WrapTabUpgrade: FC = () => {
               transactionExtraData: {
                 restoration,
               },
-              overrides: await getTransactionOverrides(network)
+              overrides: await getTransactionOverrides(network),
             });
           }}
         >
@@ -291,7 +325,11 @@ export const WrapTabUpgrade: FC = () => {
           hidden={false}
           disabled={isUpgradeDisabled}
           mutationResult={upgradeResult}
-          onClick={async (signer, setTransactionDialogContent, closeTransactionDialog) => {
+          onClick={async (
+            signer,
+            setTransactionDialogContent,
+            closeTransactionDialog
+          ) => {
             if (!formState.isValid) {
               throw Error(
                 `This should never happen. Form state: ${JSON.stringify(
@@ -320,7 +358,7 @@ export const WrapTabUpgrade: FC = () => {
               transactionExtraData: {
                 restoration,
               },
-              overrides: await getTransactionOverrides(network)
+              overrides: await getTransactionOverrides(network),
             })
               .unwrap()
               .then(() => resetForm());

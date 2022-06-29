@@ -62,6 +62,7 @@ declare module "@mui/material/styles/createPalette" {
 
 declare module "@mui/material/Button" {
   interface ButtonPropsSizeOverrides {
+    xxs: true;
     xs: true;
     xl: true;
   }
@@ -625,6 +626,16 @@ export function getThemedComponents(theme: Theme): ThemeOptions {
           },
         },
         variants: [
+          {
+            props: { size: "xxs" },
+            style: {
+              ...theme.typography.caption,
+              padding: "0 6px",
+              minWidth: "0",
+              borderRadius: "6px",
+              lineHeight: "20px",
+            },
+          },
           {
             props: { size: "xs" },
             style: {
