@@ -16,6 +16,7 @@ import groupBy from "lodash/fp/groupBy";
 import orderBy from "lodash/fp/orderBy";
 import { NextPage } from "next";
 import { MouseEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { OpenIcon } from "../components/OpenIcon/OpenIcon";
 import ActivityRow from "../features/activityHistory/ActivityRow";
 import ActivityTypeFilter, {
   ActivityType,
@@ -26,7 +27,6 @@ import LoadingActivityGroup from "../features/activityHistory/LoadingActivityGro
 import DatePicker from "../features/common/DatePicker";
 import { useActiveNetworks } from "../features/network/ActiveNetworksContext";
 import NetworkSelectionFilter from "../features/network/NetworkSelectionFilter";
-import { OpenIcon } from "../features/network/SelectNetwork";
 import { subgraphApi } from "../features/redux/store";
 import AddressSearch from "../features/send/AddressSearch";
 import { useVisibleAddress } from "../features/wallet/VisibleAddressContext";

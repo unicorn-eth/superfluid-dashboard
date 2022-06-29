@@ -2,6 +2,7 @@ import AppsRoundedIcon from "@mui/icons-material/AppsRounded";
 import ArrowRightAltRoundedIcon from "@mui/icons-material/ArrowRightAltRounded";
 import AutoAwesomeMosaicRoundedIcon from "@mui/icons-material/AutoAwesomeMosaicRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
+import ImportContactsRoundedIcon from "@mui/icons-material/ImportContactsRounded";
 import SwapVertRoundedIcon from "@mui/icons-material/SwapVertRounded";
 import {
   Box,
@@ -126,6 +127,14 @@ export default memo(function NavigationDrawer() {
         />
 
         <NavigationItem
+          id="nav-address-book"
+          title="Address Book"
+          href="/address-book"
+          active={isActiveRoute("/address-book")}
+          icon={ImportContactsRoundedIcon}
+        />
+
+        <NavigationItem
           id="nav-ecosystem"
           title="Ecosystem"
           href="/ecosystem"
@@ -135,8 +144,6 @@ export default memo(function NavigationDrawer() {
       </Stack>
 
       <Stack justifyContent="flex-end" sx={{ flex: 1 }}>
-        {/* <Divider /> */}
-
         <Stack sx={{ my: 2, px: 2 }} gap={1}>
           <MoreNavigationItem />
           <ThemeChanger />

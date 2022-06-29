@@ -1,4 +1,3 @@
-import ExpandCircleDownOutlinedIcon from "@mui/icons-material/ExpandCircleDownOutlined";
 import {
   Collapse,
   IconButton,
@@ -16,6 +15,7 @@ import { AccountTokenSnapshot } from "@superfluid-finance/sdk-core";
 import { BigNumber } from "ethers";
 import { useRouter } from "next/router";
 import { FC, memo, useState } from "react";
+import { OpenIcon } from "../../components/OpenIcon/OpenIcon";
 import { Network } from "../network/networks";
 import { rpcApi } from "../redux/store";
 import { UnitOfTime } from "../send/FlowRateInput";
@@ -23,20 +23,6 @@ import StreamsTable from "../streamsTable/StreamsTable";
 import Ether from "../token/Ether";
 import FlowingBalance from "../token/FlowingBalance";
 import TokenIcon from "../token/TokenIcon";
-
-interface OpenIconProps {
-  open: boolean;
-}
-
-const OpenIcon = styled(ExpandCircleDownOutlinedIcon)<OpenIconProps>(
-  ({ theme, open }) => ({
-    transform: `rotate(${open ? 180 : 0}deg)`,
-    transition: theme.transitions.create("transform", {
-      easing: theme.transitions.easing.easeInOut,
-      duration: theme.transitions.duration.leavingScreen,
-    }),
-  })
-);
 
 interface SnapshotRowProps {
   lastElement?: boolean;

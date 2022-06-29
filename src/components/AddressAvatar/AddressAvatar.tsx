@@ -1,8 +1,7 @@
 import { Avatar, AvatarProps } from "@mui/material";
 import { memo } from "react";
-import { ensApi } from "../../features/ens/ensApi.slice";
 import Blockies from "react-blockies";
-import { getAddress } from "../../utils/memoizedEthersUtils";
+import { ensApi } from "../../features/ens/ensApi.slice";
 
 interface BlockiesProps {
   size?: number;
@@ -34,7 +33,7 @@ export default memo(function AddressAvatar({
     return (
       <Avatar alt="generated blockie avatar" variant="rounded" {...AvatarProps}>
         {/* Read about the Blockies API here: https://github.com/stephensprinkle-zz/react-blockies */}
-        <Blockies seed={getAddress(address)} {...BlockiesProps} />
+        <Blockies seed={address.toLowerCase()} {...BlockiesProps} />
       </Avatar>
     );
   }

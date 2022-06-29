@@ -1,15 +1,5 @@
 import { configureStore, Dispatch } from "@reduxjs/toolkit";
 import {
-  persistReducer,
-  FLUSH,
-  REHYDRATE,
-  PAUSE,
-  PERSIST,
-  PURGE,
-  REGISTER,
-  persistStore,
-} from "redux-persist";
-import {
   allRpcEndpoints,
   allSubgraphEndpoints,
   createApiWithReactHooks,
@@ -18,16 +8,27 @@ import {
   initializeTransactionTrackerSlice,
 } from "@superfluid-finance/sdk-redux";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
+import {
+  FLUSH,
+  PAUSE,
+  PERSIST,
+  persistReducer,
+  persistStore,
+  PURGE,
+  REGISTER,
+  REHYDRATE,
+} from "redux-persist";
 import storage from "redux-persist/lib/storage";
+import { addressBookSlice } from "../addressBook/addressBook.slice";
+import { ensApi } from "../ens/ensApi.slice";
+import gasApi from "../gas/gasApi.slice";
+import { impersonationSlice } from "../impersonation/impersonation.slice";
+import { networkPreferencesSlice } from "../network/networkPreferences.slice";
+import { pendingUpdateSlice } from "../pendingUpdates/pendingUpdate.slice";
+import { assetApiSlice } from "../token/tokenManifestSlice";
 import { adHocMulticallEndpoints } from "./endpoints/adHocMulticallEndpoints";
 import { adHocRpcEndpoints } from "./endpoints/adHocRpcEndpoints";
 import { adHocSubgraphEndpoints } from "./endpoints/adHocSubgraphEndpoints";
-import { assetApiSlice } from "../token/tokenManifestSlice";
-import { ensApi } from "../ens/ensApi.slice";
-import { impersonationSlice } from "../impersonation/impersonation.slice";
-import { networkPreferencesSlice } from "../network/networkPreferences.slice";
-import gasApi from "../gas/gasApi.slice";
-import { pendingUpdateSlice } from "../pendingUpdates/pendingUpdate.slice";
 
 export const rpcApi = initializeRpcApiSlice(createApiWithReactHooks)
   .injectEndpoints(allRpcEndpoints)
@@ -63,6 +64,11 @@ const impersonationPersistedReducer = persistReducer(
   impersonationSlice.reducer
 );
 
+const addressBookPersistedReducer = persistReducer(
+  { storage, key: "addressBook", version: 2 },
+  addressBookSlice.reducer
+);
+
 const networkPreferencesPersistedReducer = persistReducer(
   { storage, key: "network-preferences", version: 1 },
   networkPreferencesSlice.reducer
@@ -76,6 +82,7 @@ export const reduxStore = configureStore({
     [assetApiSlice.reducerPath]: assetApiSlice.reducer,
     [ensApi.reducerPath]: ensApi.reducer,
     impersonations: impersonationPersistedReducer,
+    addressBook: addressBookPersistedReducer,
     networkPreferences: networkPreferencesPersistedReducer,
     [gasApi.reducerPath]: gasApi.reducer,
     pendingUpdates: pendingUpdateSlice.reducer,

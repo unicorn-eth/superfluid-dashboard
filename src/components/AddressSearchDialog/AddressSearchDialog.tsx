@@ -17,9 +17,11 @@ import {
 import { FC, memo, ReactNode, useEffect, useState } from "react";
 import ResponsiveDialog from "../../features/common/ResponsiveDialog";
 import AddressAvatar from "../AddressAvatar/AddressAvatar";
-import useSearchAddress from "../../hooks/useSearchAddress";
 import { getAddress, isAddress } from "../../utils/memoizedEthersUtils";
 import useAddressName from "../../hooks/useAddressName";
+import { useAppSelector } from "../../features/redux/store";
+import { addressBookSelectors } from "../../features/addressBook/addressBook.slice";
+import { ensApi } from "../../features/ens/ensApi.slice";
 
 const LIST_ITEM_STYLE = { px: 3, minHeight: 68 };
 
@@ -34,11 +36,10 @@ export const AddressListItem: FC<AddressListItemProps> = ({
   address,
   dataCy,
   onClick,
-  namePlaceholder
+  namePlaceholder,
 }) => {
   const { name, addressChecksummed: checksumHex } = useAddressName(address);
 
-  
   return (
     <ListItemButton onClick={onClick} sx={LIST_ITEM_STYLE}>
       <ListItemAvatar>
@@ -59,6 +60,7 @@ export type AddressSearchDialogProps = {
   onSelectAddress: (address: string) => void;
   title: string;
   index: ReactNode | null;
+  showAddressBook?: boolean;
 };
 
 export default memo(function AddressSearchDialog({
@@ -67,6 +69,7 @@ export default memo(function AddressSearchDialog({
   onClose,
   title,
   index,
+  showAddressBook = true,
 }: AddressSearchDialogProps) {
   const theme = useTheme();
 
@@ -86,6 +89,7 @@ export default memo(function AddressSearchDialog({
   };
 
   const [openCounter, setOpenCounter] = useState(0);
+
   useEffect(() => {
     if (open) {
       setOpenCounter(openCounter + 1);
@@ -102,7 +106,11 @@ export default memo(function AddressSearchDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTermDebounced]);
 
-  const { ensQuery } = useSearchAddress(searchTermDebounced);
+  const addressBookResults = useAppSelector((state) =>
+    addressBookSelectors.searchAddressBookEntries(state, searchTermDebounced)
+  );
+
+  const ensQuery = ensApi.useResolveNameQuery(searchTermDebounced);
   const ensData = ensQuery.data; // Put into separate variable because TS couldn't infer in the render function that `!!ensQuery.data` means that the data is not undefined nor null.
   const showEns = !!searchTermDebounced && !isAddress(searchTermDebounced);
 
@@ -173,6 +181,25 @@ export default memo(function AddressSearchDialog({
                 )}
               </>
             ) : null}
+
+            {showAddressBook && (
+              <>
+                <ListSubheader sx={{ px: 3 }}>Address Book</ListSubheader>
+                {addressBookResults.length === 0 && (
+                  <ListItem sx={LIST_ITEM_STYLE}>
+                    <ListItemText primary="No results" />
+                  </ListItem>
+                )}
+                {addressBookResults.map((addressBookEntry) => (
+                  <AddressListItem
+                    key={addressBookEntry.address}
+                    address={addressBookEntry.address}
+                    onClick={() => onSelectAddress(addressBookEntry.address)}
+                    namePlaceholder={addressBookEntry.name}
+                  />
+                ))}
+              </>
+            )}
           </List>
         )}
       </DialogContent>
