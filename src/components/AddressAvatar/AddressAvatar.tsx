@@ -14,17 +14,11 @@ interface AddressAvatarProps {
   BlockiesProps?: BlockiesProps;
 }
 
-interface RainbowKitAvatarComponentProps {
-  address: string;
-  ensImage?: string | null;
-  size: number;
-}
-
 export default memo(function AddressAvatar({
   address,
   AvatarProps = {},
   BlockiesProps = { size: 12, scale: 3 },
-}: AddressAvatarProps & RainbowKitAvatarComponentProps) {
+}: AddressAvatarProps) {
   const { data: ensAvatarUrl } = ensApi.useGetAvatarQuery(address);
   if (ensAvatarUrl) {
     return (

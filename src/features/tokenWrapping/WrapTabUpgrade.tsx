@@ -28,7 +28,7 @@ import { BalanceUnderlyingToken } from "./BalanceUnderlyingToken";
 import { TokenDialogButton } from "./TokenDialogButton";
 import { ArrowDownIcon, WrapInputCard } from "./WrapCard";
 import { ValidWrappingForm, WrappingForm } from "./WrappingFormProvider";
-import { useAccount } from "wagmi";
+import { useConnect } from "wagmi";
 
 export const WrapTabUpgrade: FC = () => {
   const theme = useTheme();
@@ -37,7 +37,7 @@ export const WrapTabUpgrade: FC = () => {
   const { visibleAddress } = useVisibleAddress();
   const { setTransactionDrawerOpen } = useLayoutContext();
   const getTransactionOverrides = useGetTransactionOverrides();
-  const { connector: activeConnector } = useAccount();
+  const { activeConnector } = useConnect();
 
   const {
     watch,

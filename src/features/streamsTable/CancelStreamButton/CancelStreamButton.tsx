@@ -37,7 +37,7 @@ const CancelStreamButton: FC<CancelStreamButtonProps> = ({
 }) => {
   const { token, sender, receiver } = stream;
 
-  const { chain: activeChain } = useNetwork();
+  const { activeChain } = useNetwork();
   const { data: signer } = useSigner();
   const [flowDeleteTrigger, flowDeleteMutation] =
     rpcApi.useFlowDeleteMutation();
