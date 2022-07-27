@@ -34,7 +34,7 @@ import { Network, networksBySlug } from "../../../features/network/networks";
 import { subgraphApi } from "../../../features/redux/store";
 import { UnitOfTime } from "../../../features/send/FlowRateInput";
 import CancelStreamButton from "../../../features/streamsTable/CancelStreamButton/CancelStreamButton";
-import Ether from "../../../features/token/Ether";
+import Amount from "../../../features/token/Amount";
 import FlowingBalance from "../../../features/token/FlowingBalance";
 import TokenIcon from "../../../features/token/TokenIcon";
 import useNavigateBack from "../../../hooks/useNavigateBack";
@@ -513,7 +513,7 @@ const StreamPageContent: FC<{
         {currentFlowRate !== "0" && (
           <Stack direction="row" alignItems="center" gap={0.5}>
             <Typography variant="h6">
-              <Ether
+              <Amount
                 wei={BigNumber.from(currentFlowRate).mul(UnitOfTime.Month)}
               />
             </Typography>
@@ -548,7 +548,7 @@ const StreamPageContent: FC<{
             value={
               bufferSize ? (
                 <>
-                  <Ether wei={bufferSize} /> {tokenSymbol}
+                  <Amount wei={bufferSize} /> {tokenSymbol}
                 </>
               ) : (
                 "-"
