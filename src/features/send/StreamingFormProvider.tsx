@@ -1,26 +1,21 @@
 import { FC, useEffect, useMemo, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useAccount } from "wagmi";
-import { bool, number, object, ObjectSchema, string } from "yup";
+import { bool, mixed, object, ObjectSchema, string } from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { rpcApi } from "../redux/store";
-import {
-  formRestorationOptions,
-  ModifyStreamRestoration,
-  SendStreamRestoration,
-} from "../transactionRestoration/transactionRestorations";
+import { formRestorationOptions } from "../transactionRestoration/transactionRestorations";
 import { UnitOfTime } from "./FlowRateInput";
 import { useExpectedNetwork } from "../network/ExpectedNetworkContext";
 import useCalculateBufferInfo from "./useCalculateBufferInfo";
 import { parseEther } from "@superfluid-finance/sdk-redux/node_modules/@ethersproject/units";
-import { formatEther } from "ethers/lib/utils";
 import { testAddress, testEtherAmount } from "../../utils/yupUtils";
 import { BigNumber } from "ethers";
 
 export type ValidStreamingForm = {
   data: {
-    token: SendStreamRestoration["token"];
-    receiver: string;
+    tokenAddress: string;
+    receiverAddress: string;
     flowRate: {
       amountEther: string;
       unitOfTime: UnitOfTime;
@@ -29,23 +24,37 @@ export type ValidStreamingForm = {
   };
 };
 
-const defaultFlowRate = {
-  amountEther: "",
-  unitOfTime: UnitOfTime.Month,
+const defaultFormValues = {
+  data: {
+    flowRate: {
+      amountEther: "",
+      unitOfTime: UnitOfTime.Month,
+    },
+    receiverAddress: null,
+    tokenAddress: null,
+    understandLiquidationRisk: false,
+  },
 };
 
 export type PartialStreamingForm = {
   data: {
-    token: ValidStreamingForm["data"]["token"] | null;
-    receiver: ValidStreamingForm["data"]["receiver"] | null;
-    flowRate: ValidStreamingForm["data"]["flowRate"] | typeof defaultFlowRate;
+    tokenAddress: ValidStreamingForm["data"]["tokenAddress"] | null;
+    receiverAddress: ValidStreamingForm["data"]["receiverAddress"] | null;
+    flowRate:
+      | ValidStreamingForm["data"]["flowRate"]
+      | typeof defaultFormValues.data.flowRate;
     understandLiquidationRisk: boolean;
   };
 };
 
-const StreamingFormProvider: FC<{
-  restoration: SendStreamRestoration | ModifyStreamRestoration | undefined;
-}> = ({ restoration, children }) => {
+export interface StreamingFormProviderProps {
+  initialFormValues: Partial<ValidStreamingForm["data"]>;
+}
+
+const StreamingFormProvider: FC<StreamingFormProviderProps> = ({
+  children,
+  initialFormValues,
+}) => {
   const { address: accountAddress } = useAccount();
   const { network, stopAutoSwitchToAccountNetwork } = useExpectedNetwork();
   const [queryRealtimeBalance] = rpcApi.useLazyRealtimeBalanceQuery();
@@ -57,21 +66,19 @@ const StreamingFormProvider: FC<{
       object().test(async (values, context) => {
         const primaryValidation: ObjectSchema<ValidStreamingForm> = object({
           data: object({
-            token: object({
-              type: number().required(),
-              address: string().required().test(testAddress()),
-              name: string().required(),
-              symbol: string().required(),
-              decimals: number().required()
-            }).required(),
-            receiver: string().required().test(testAddress()).required(),
+            tokenAddress: string().required().test(testAddress()),
+            receiverAddress: string().required().test(testAddress()),
             flowRate: object({
               amountEther: string()
                 .required()
                 .test(testEtherAmount({ notNegative: true, notZero: true })),
-              unitOfTime: number().required(),
+              unitOfTime: mixed<UnitOfTime>()
+                .required()
+                .test(
+                  (x) => Object.values(UnitOfTime).includes(x as UnitOfTime) // To check whether value is from an enum: https://github.com/microsoft/TypeScript/issues/33200#issuecomment-527670779
+                ),
             }),
-            understandLiquidationRisk: bool().isTrue().required(),
+            understandLiquidationRisk: bool().required().isTrue(),
           }),
         });
 
@@ -94,8 +101,7 @@ const StreamingFormProvider: FC<{
           });
         };
 
-        const tokenAddress = validForm.data.token.address;
-        const receiverAddress = validForm.data.receiver;
+        const { tokenAddress, receiverAddress } = validForm.data;
 
         if (
           accountAddress &&
@@ -165,36 +171,36 @@ const StreamingFormProvider: FC<{
   );
 
   const formMethods = useForm<PartialStreamingForm>({
-    defaultValues: {
-      data: {
-        flowRate: defaultFlowRate,
-        receiver: null,
-        token: null,
-        understandLiquidationRisk: false,
-      },
-    },
+    defaultValues: defaultFormValues,
     resolver: yupResolver(formSchema),
     mode: "onChange",
   });
 
   const { formState, setValue, trigger, clearErrors, setError } = formMethods;
 
-  const [hasRestored, setHasRestored] = useState(!restoration);
+  const [isInitialized, setIsInitialized] = useState(!initialFormValues);
   useEffect(() => {
-    if (restoration) {
+    if (initialFormValues) {
       setValue(
-        "data.flowRate",
+        "data",
         {
-          amountEther: formatEther(restoration.flowRate.amountWei),
-          unitOfTime: restoration.flowRate.unitOfTime,
+          flowRate:
+            initialFormValues.flowRate ?? defaultFormValues.data.flowRate,
+          receiverAddress:
+            initialFormValues.receiverAddress ??
+            defaultFormValues.data.receiverAddress,
+          tokenAddress:
+            initialFormValues.tokenAddress ??
+            defaultFormValues.data.tokenAddress,
+          understandLiquidationRisk:
+            initialFormValues.understandLiquidationRisk ??
+            defaultFormValues.data.understandLiquidationRisk,
         },
         formRestorationOptions
       );
-      setValue("data.receiver", restoration.receiver, formRestorationOptions);
-      setValue("data.token", restoration.token, formRestorationOptions);
-      setHasRestored(true);
+      setIsInitialized(true);
     }
-  }, [restoration]);
+  }, []);
 
   useEffect(() => {
     if (formState.isDirty) {
@@ -208,7 +214,7 @@ const StreamingFormProvider: FC<{
     }
   }, [accountAddress]);
 
-  return hasRestored ? (
+  return isInitialized ? (
     <FormProvider {...formMethods}>{children}</FormProvider>
   ) : null;
 };
