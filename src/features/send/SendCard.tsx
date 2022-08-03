@@ -343,7 +343,7 @@ export default memo(function SendCard() {
                     }
                     label={
                       <Typography variant="body2">
-                        I understand that if I have to{" "}
+                        I understand that I have to{" "}
                         <strong>
                           cancel the stream before my balance reaches zero
                         </strong>{" "}

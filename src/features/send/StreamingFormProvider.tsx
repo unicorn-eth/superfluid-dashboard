@@ -11,6 +11,8 @@ import useCalculateBufferInfo from "./useCalculateBufferInfo";
 import { parseEther } from "@superfluid-finance/sdk-redux/node_modules/@ethersproject/units";
 import { testAddress, testEtherAmount } from "../../utils/yupUtils";
 import { BigNumber } from "ethers";
+import { getMinimumStreamTimeInMinutes } from "../../utils/tokenUtils";
+import { dateNowSeconds } from "../../utils/dateUtils";
 
 export type ValidStreamingForm = {
   data: {
@@ -142,15 +144,16 @@ const StreamingFormProvider: FC<StreamingFormProviderProps> = ({
             });
 
           if (newDateWhenBalanceCritical) {
-            const minimumStreamTime = network.bufferTimeInMinutes * 60 * 2;
+            const minimumStreamTimeInSeconds =
+              getMinimumStreamTimeInMinutes(network.bufferTimeInMinutes) * 60;
+            const secondsToCritical = newDateWhenBalanceCritical.getTime() / 1000 - dateNowSeconds();
 
-            const secondsToCritical = Math.round(
-              (newDateWhenBalanceCritical.getTime() - Date.now()) / 1000
-            );
-
-            if (secondsToCritical < minimumStreamTime) {
+            if (secondsToCritical < minimumStreamTimeInSeconds) {
+              // NOTE: "secondsToCritical" might be off about 1 minute because of RTK-query cache for the balance query
               handleHigherOrderValidationError({
-                message: `You need to leave enough balance to stream for ${minimumStreamTime} seconds.`,
+                message: `You need to leave enough balance to stream for ${
+                  minimumStreamTimeInSeconds / 3600
+                } hours.`,
               });
             }
           }
@@ -167,7 +170,7 @@ const StreamingFormProvider: FC<StreamingFormProviderProps> = ({
 
         return true;
       }),
-    [network, accountAddress]
+    [network, accountAddress, calculateBufferInfo]
   );
 
   const formMethods = useForm<PartialStreamingForm>({
