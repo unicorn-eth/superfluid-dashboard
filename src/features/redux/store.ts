@@ -30,8 +30,15 @@ import { assetApiSlice } from "../token/tokenManifestSlice";
 import { adHocMulticallEndpoints } from "./endpoints/adHocMulticallEndpoints";
 import { adHocRpcEndpoints } from "./endpoints/adHocRpcEndpoints";
 import { adHocSubgraphEndpoints } from "./endpoints/adHocSubgraphEndpoints";
+import { setupListeners } from "@reduxjs/toolkit/query";
 
-export const rpcApi = initializeRpcApiSlice(createApiWithReactHooks)
+export const rpcApi = initializeRpcApiSlice((options) =>
+  createApiWithReactHooks({
+    ...options,
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+  })
+)
   .injectEndpoints(allRpcEndpoints)
   .injectEndpoints(adHocMulticallEndpoints)
   .injectEndpoints(adHocRpcEndpoints);
@@ -48,6 +55,8 @@ export const subgraphApi = initializeSubgraphApiSlice((options) =>
         return action.payload[reducerPath];
       }
     },
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
   })
 )
   .injectEndpoints(allSubgraphEndpoints)
@@ -108,6 +117,9 @@ export const reduxStore = configureStore({
 });
 
 export const reduxPersistor = persistStore(reduxStore);
+
+// optional, but required for refetchOnFocus/refetchOnReconnect behaviors of RTK-Query
+setupListeners(reduxStore.dispatch);
 
 export type AppStore = typeof reduxStore;
 export type RootState = ReturnType<AppStore["getState"]>;
