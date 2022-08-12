@@ -6,17 +6,13 @@ import {
   TooltipProps,
 } from "@mui/material";
 import { Stream } from "@superfluid-finance/sdk-core";
-import { FC, useState } from "react";
-import { useNetwork, useSigner } from "wagmi";
+import { Signer } from "ethers";
+import { FC } from "react";
 import useGetTransactionOverrides from "../../../hooks/useGetTransactionOverrides";
 import { Network } from "../../network/networks";
-import usePendingStreamCancellation from "../../pendingUpdates/usePendingStreamCancellation";
+import { usePendingStreamCancellation } from "../../pendingUpdates/PendingStreamCancellation";
 import { rpcApi } from "../../redux/store";
-import {
-  TransactionDialog,
-  TransactionDialogActions,
-  TransactionDialogButton,
-} from "../../transactions/TransactionDialog";
+import { TransactionBoundary } from "../../transactionBoundary/TransactionBoundary";
 import CancelStreamProgress from "./CancelStreamProgress";
 
 interface CancelStreamButtonProps {
@@ -34,8 +30,6 @@ const CancelStreamButton: FC<CancelStreamButtonProps> = ({
 }) => {
   const { token, sender, receiver } = stream;
 
-  const { chain: activeChain } = useNetwork();
-  const { data: signer } = useSigner();
   const [flowDeleteTrigger, flowDeleteMutation] =
     rpcApi.useFlowDeleteMutation();
   const getTransactionOverrides = useGetTransactionOverrides();
@@ -45,15 +39,7 @@ const CancelStreamButton: FC<CancelStreamButtonProps> = ({
     receiverAddress: receiver,
   });
 
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
-
-  const closeCancelDialog = () => setShowCancelDialog(false);
-
-  const deleteStream = async () => {
-    if (!signer) {
-      throw new Error("Signer is not set.");
-    }
-
+  const deleteStream = async (signer: Signer) => {
     flowDeleteTrigger({
       signer,
       chainId: network.id,
@@ -64,35 +50,39 @@ const CancelStreamButton: FC<CancelStreamButtonProps> = ({
       waitForConfirmation: false,
       overrides: await getTransactionOverrides(network),
     }).unwrap();
-
-    setShowCancelDialog(true);
   };
 
-  return (
-    <>
-      {flowDeleteMutation.isLoading || !!pendingCancellation ? (
-        <CancelStreamProgress pendingCancellation={pendingCancellation} />
-      ) : (
-        <>
+  return (<TransactionBoundary
+          mutationResult={flowDeleteMutation}
+          expectedNetwork={network}
+      >
+        {({ mutationResult, isCorrectNetwork, signer, isConnected }) =>
+            mutationResult.isLoading || !!pendingCancellation ? (
+                <CancelStreamProgress pendingCancellation={pendingCancellation} />
+            ) : (<>
           <Tooltip
             data-cy={"switch-network-tooltip"}
             placement="top"
             arrow
             disableInteractive
             title={
-              network.id === activeChain?.id
-                ? "Cancel Stream"
-                : `Please connect your wallet and switch provider network to ${network.name} in order to cancel the stream.`
+              !isConnected
+              ? "Connect wallet to cancel stream"
+              : !isCorrectNetwork
+              ? `Switch network to ${network.name} to cancel stream`
+              : "Cancel stream"
             }
-            // disableHoverListener={network.id === activeChain?.id}
             {...TooltipProps}
           >
             <span>
               <IconButton
                 data-cy={"cancel-button"}
                 color="error"
-                onClick={deleteStream}
-                disabled={network.id !== activeChain?.id}
+                onClick={() => {
+                  if (!signer)
+                    throw new Error("Signer should always be present here.");
+                  deleteStream(signer)}}
+                disabled={!(isConnected && signer && isCorrectNetwork)}
                 {...IconButtonProps}
               >
                 <CancelRoundedIcon />
@@ -101,21 +91,7 @@ const CancelStreamButton: FC<CancelStreamButtonProps> = ({
           </Tooltip>
         </>
       )}
-
-      <TransactionDialog
-        mutationResult={flowDeleteMutation}
-        network={network}
-        onClose={closeCancelDialog}
-        open={showCancelDialog}
-        successActions={
-          <TransactionDialogActions>
-            <TransactionDialogButton onClick={closeCancelDialog}>
-              OK
-            </TransactionDialogButton>
-          </TransactionDialogActions>
-        }
-      />
-    </>
+      </TransactionBoundary>
   );
 };
 
