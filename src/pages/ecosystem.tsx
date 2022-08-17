@@ -350,7 +350,7 @@ const Ecosystem: NextPage = () => {
               },
             }}
           >
-            <Typography variant="h3" component="h1">
+            <Typography variant="h3" component="h1" translate="yes">
               Explore the Superfluid ecosystem
             </Typography>
             <Link
