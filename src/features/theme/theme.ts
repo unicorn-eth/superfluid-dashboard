@@ -315,7 +315,7 @@ const getDesignTokens = (theme: Theme): ThemeOptions => {
         letterSpacing: pxToRem(0.15),
       },
       tooltip: {
-        fontSize: pxToRem(12),
+        fontSize: pxToRem(13),
         fontWeight: 400,
       },
     },
@@ -915,7 +915,7 @@ export function getThemedComponents(theme: Theme): ThemeOptions {
       },
       MuiListItem: {
         styleOverrides: {
-          root: {
+          padding: {
             padding: "8px 24px",
           },
         },
