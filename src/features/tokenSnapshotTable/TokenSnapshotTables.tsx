@@ -115,7 +115,6 @@ const TokenSnapshotTables: FC<TokenSnapshotTablesProps> = ({ address }) => {
             fetchingCallback={fetchingCallback}
           />
         ))}
-
         {isLoading && <TokenSnapshotLoadingTable />}
       </Stack>
     </>
