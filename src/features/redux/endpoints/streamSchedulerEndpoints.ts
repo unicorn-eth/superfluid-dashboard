@@ -84,6 +84,7 @@ export const streamSchedulerEndpoints = {
           ).unwrap(),
         ]);
 
+        const { streamScheduler } = getEthSdk(chainId, arg.signer);
         const subOperations: {
           operation: Operation;
           title: TransactionTitle;
@@ -91,7 +92,6 @@ export const streamSchedulerEndpoints = {
 
         const network = findNetworkByChainId(chainId);
         if (network?.streamSchedulerContractAddress) {
-          const { streamScheduler } = getEthSdk(chainId, arg.signer);
           const existingEndTimestamp = await dispatch(
             rpcApi.endpoints.scheduledEndDate.initiate(
               {
