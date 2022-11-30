@@ -359,7 +359,7 @@ export class WrapPage extends BasePage {
         })
         cy.get("@underlyingBalanceBeforeUnwrap").then((balanceBefore: any) => {
             let expectedAmount = (parseFloat(balanceBefore) + parseFloat(amount)).toFixed(4).toString().substr(0, 4)
-            this.containsText(UNDERLYING_BALANCE, `Balance: ${expectedAmount}`)
+            cy.get(UNDERLYING_BALANCE, {timeout: 45000}).should("contain.text",`Balance: ${expectedAmount}`)
         })
         cy.get("@lastUnwrappedToken").then((lastToken: any) => {
             this.hasText(SELECT_TOKEN_BUTTON, lastToken)
