@@ -1,7 +1,6 @@
 import { skipToken } from "@reduxjs/toolkit/dist/query";
 import { FC } from "react";
 import {
-  useAddressPendingVestingScheduleDeletes,
   usePendingVestingScheduleDelete,
 } from "../pendingUpdates/PendingVestingScheduleDelete";
 import { rpcApi } from "../redux/store";
@@ -22,6 +21,7 @@ import { useVisibleAddress } from "../wallet/VisibleAddressContext";
 import Link from "next/link";
 import { Typography } from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import { useAnalytics } from "../analytics/useAnalytics";
 
 export const DeleteVestingTransactionButton: FC<{
   superTokenAddress: string;
@@ -36,6 +36,7 @@ export const DeleteVestingTransactionButton: FC<{
   TransactionBoundaryProps,
   TransactionButtonProps,
 }) => {
+  const { txAnalytics } = useAnalytics();
   const [deleteVestingSchedule, deleteVestingScheduleResult] =
     rpcApi.useDeleteVestingScheduleMutation();
 
@@ -89,16 +90,20 @@ export const DeleteVestingTransactionButton: FC<{
                 </Typography>
               );
 
-              deleteVestingSchedule({
-                signer,
+              const primaryArgs = {
                 chainId: network.id,
                 superTokenAddress: superTokenAddress,
                 senderAddress: await signer.getAddress(),
                 receiverAddress: receiverAddress,
-                transactionExtraData: undefined,
+              };
+              deleteVestingSchedule({
+                ...primaryArgs,
+                signer,
                 overrides: await getOverrides(),
                 waitForConfirmation: false,
-              });
+              })
+                .unwrap()
+                .then(...txAnalytics("Delete Vesting Schedule", primaryArgs));
 
               setDialogSuccessActions(
                 <TransactionDialogActions>
