@@ -49,13 +49,6 @@ const MonitorContext: FC = () => {
   const [previousInstanceDetails, setPreviousInstanceDetails] =
     useState(instanceDetails);
 
-  const initialResetRef = useRef(false);
-  if (!initialResetRef.current) {
-    // When application starts up, reset the identity. Identify only on concrete wallet connections.
-    initialResetRef.current = true;
-    reset();
-  }
-
   useEffect(
     () =>
       listenerMiddleware.startListening({
