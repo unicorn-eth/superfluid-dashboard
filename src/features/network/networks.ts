@@ -1,4 +1,4 @@
-import { isNumber, isString } from "lodash";
+import { isString } from "lodash";
 import memoize from "lodash/memoize";
 import * as chain from "wagmi/chains";
 import { Chain } from "wagmi/chains";
