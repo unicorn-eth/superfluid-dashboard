@@ -303,7 +303,7 @@ export const networkDefinition = {
       superToken: {
         type: TokenType.NativeAssetSuperToken,
         symbol: "AVAXx",
-        address: "0x5735c32c38f5af0fb04a7c77c832ba4d7abffec8",
+        address: "0xffd0f6d73ee52c68bf1b01c8afa2529c97ca17f3",
         name: "Super AVAX",
         decimals: 18,
       },
