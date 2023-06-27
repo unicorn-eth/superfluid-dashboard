@@ -2,8 +2,7 @@ import { Typography } from "@mui/material";
 import { TransactionTitle } from "@superfluid-finance/sdk-redux";
 import { constants } from "ethers";
 import { FC, memo } from "react";
-import { useQuery, useSigner } from "wagmi";
-import { usePrepareErc20Approve } from "../../../generated";
+import { usePrepareContractWrite, useQuery, useWalletClient } from "wagmi";
 import { useExpectedNetwork } from "../../network/ExpectedNetworkContext";
 import { rpcApi, subgraphApi } from "../../redux/store";
 import { TransactionBoundary } from "../../transactionBoundary/TransactionBoundary";
@@ -11,6 +10,7 @@ import { TransactionButton } from "../../transactionBoundary/TransactionButton";
 import { VestingToken } from "../CreateVestingSection";
 import useGetTransactionOverrides from "../../../hooks/useGetTransactionOverrides";
 import { convertOverridesForWagmi } from "../../../utils/convertOverridesForWagmi";
+import { erc20ABI } from "../../../generated";
 
 const TX_TITLE: TransactionTitle = "Approve Allowance";
 
@@ -18,10 +18,10 @@ const AutoWrapAllowanceTransactionButton: FC<{
   token: VestingToken;
   isVisible: boolean;
   isDisabled: boolean;
-}> = ({ token, isVisible, isDisabled: isDisabled_ }) => {
+}> = ({ token, isVisible, ...props }) => {
   const { network } = useExpectedNetwork();
 
-  const { data: signer } = useSigner();
+  const { data: walletClient } = useWalletClient();
 
   const getGasOverrides = useGetTransactionOverrides();
   const { data: overrides } = useQuery(
@@ -31,20 +31,21 @@ const AutoWrapAllowanceTransactionButton: FC<{
 
   const primaryArgs = {
     spender: network.autoWrap!.strategyContractAddress,
-    amount: constants.MaxUint256,
+    amount: BigInt(constants.MaxUint256.toString()),
   };
 
-  const disabled = isDisabled_ && !!network.autoWrap;
-  const { config } = usePrepareErc20Approve(
-    disabled
-      ? undefined
-      : {
+  const prepare = !props.isDisabled && network.autoWrap && walletClient;
+  const { config } = usePrepareContractWrite(
+    prepare
+      ? {
+          abi: erc20ABI,
+          functionName: "approve",
           address: token.underlyingAddress as `0x${string}`,
           chainId: network.id,
           args: [primaryArgs.spender, primaryArgs.amount],
-          signer,
-          overrides,
+          ...overrides,
         }
+      : undefined
   );
 
   const [write, mutationResult] = rpcApi.useWriteContractMutation();
@@ -54,27 +55,30 @@ const AutoWrapAllowanceTransactionButton: FC<{
     id: token.underlyingAddress,
   });
   const underlyingToken = underlyingTokenQuery.data;
-  const isDisabled = isDisabled_ && !config;
+
+  const isButtonEnabled = prepare && config.request;
+  const isButtonDisabled = !isButtonEnabled;
 
   return (
     <TransactionBoundary mutationResult={mutationResult}>
       {({ network, setDialogLoadingInfo, txAnalytics }) =>
         isVisible && (
           <TransactionButton
-            disabled={isDisabled}
+            disabled={isButtonDisabled}
             onClick={async (signer) => {
-              if (!config) throw new Error("This should never happen!");
+              if (isButtonDisabled)
+                throw new Error("This should never happen!");
               setDialogLoadingInfo(
                 <Typography variant="h5" color="text.secondary" translate="yes">
-                  You are approving Auto-Wrap token allowance for the
-                  underlying token.
+                  You are approving Auto-Wrap token allowance for the underlying
+                  token.
                 </Typography>
               );
 
               write({
                 signer,
-                config: {
-                  ...config,
+                request: {
+                  ...config.request,
                   chainId: network.id,
                 },
                 transactionTitle: "Approve Allowance",
