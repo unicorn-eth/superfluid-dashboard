@@ -62,6 +62,7 @@ import {
 import { platformApi } from "./platformApi/platformApi";
 import addressBookRpcApi from "../addressBook/addressBookRpcApi.slice";
 import { autoWrapEndpoints } from "./endpoints/autoWrapEndpoints";
+import { autoWrapSubgraphApi } from "../../auto-wrap-subgraph/autoWrapSubgraphApi";
 import { tokenAccessMutationEndpoints } from "./endpoints/tokenAccessEndpoints";
 
 export const rpcApi = initializeRpcApiSlice((options) =>
@@ -197,6 +198,7 @@ export const reduxStore = configureStore({
     [tokenPriceApi.reducerPath]: tokenPriceApi.reducer,
     [accountingApi.reducerPath]: accountingApi.reducer,
     [vestingSubgraphApi.reducerPath]: vestingSubgraphApi.reducer,
+    [autoWrapSubgraphApi.reducerPath]: autoWrapSubgraphApi.reducer,
     [pushApi.reducerPath]: pushApi.reducer,
     [schedulingSubgraphApi.reducerPath]: schedulingSubgraphApi.reducer,
     [addressBookRpcApi.reducerPath]: addressBookRpcApi.reducer,
@@ -229,6 +231,7 @@ export const reduxStore = configureStore({
       .prepend(sentryErrorLogger)
       .concat(rpcApi.middleware)
       .concat(vestingSubgraphApi.middleware)
+      .concat(autoWrapSubgraphApi.middleware)
       .concat(schedulingSubgraphApi.middleware)
       .concat(subgraphApi.middleware)
       .concat(assetApiSlice.middleware)

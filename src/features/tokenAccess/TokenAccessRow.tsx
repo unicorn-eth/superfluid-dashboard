@@ -25,14 +25,14 @@ import {
 import { flowOperatorPermissionsToString } from "../../utils/flowOperatorPermissionsToString";
 import { useTheme } from "@mui/material/styles";
 import UpsertTokenAccessFormProvider, {
-  Token,
+  AccessToken,
   UpsertTokenAccessFormProviderProps,
 } from "./dialog/UpsertTokenAccessFormProvider";
-import { getSuperTokenType } from "../redux/endpoints/adHocSubgraphEndpoints";
 import { Add } from "@mui/icons-material";
 import ResponsiveDialog from "../common/ResponsiveDialog";
 import { UpsertTokenAccessForm } from "./dialog/UpsertTokenAccessForm";
 import TooltipWithIcon from "../common/TooltipWithIcon";
+import { getSuperTokenType } from "../redux/endpoints/adHocSubgraphEndpoints";
 
 interface Props {
   address: Address;
@@ -129,18 +129,19 @@ const TokenAccessRow: FC<Props> = ({
     return {
       network: network,
       token: tokenInfo
-        ? ({
+        ? {
+            ...tokenInfo,
+            type: getSuperTokenType({
+              ...tokenInfo,
+              network: network!,
+              address: tokenInfo.id,
+            }),
             address: tokenInfo.id,
-            decimals: tokenInfo.decimals,
-            isListed: tokenInfo.isListed,
             name: tokenInfo.name,
             symbol: tokenInfo.symbol,
-            type: getSuperTokenType({
-              network,
-              address: tokenInfo.id,
-              underlyingAddress: tokenInfo.underlyingAddress,
-            }),
-          } as Token)
+            decimals: 18,
+            isListed: tokenInfo.isListed,
+          } as AccessToken
         : undefined,
       operatorAddress: address,
       flowOperatorPermissions: initialAccess.flowOperatorPermissions,

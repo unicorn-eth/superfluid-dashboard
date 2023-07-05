@@ -3,7 +3,6 @@ import { TransactionTitle } from "@superfluid-finance/sdk-redux";
 import { constants } from "ethers";
 import { FC, memo } from "react";
 import { usePrepareContractWrite, useQuery, useWalletClient } from "wagmi";
-import { useExpectedNetwork } from "../../network/ExpectedNetworkContext";
 import { rpcApi, subgraphApi } from "../../redux/store";
 import { TransactionBoundary } from "../../transactionBoundary/TransactionBoundary";
 import { TransactionButton } from "../../transactionBoundary/TransactionButton";
@@ -12,6 +11,8 @@ import { convertOverridesForWagmi } from "../../../utils/convertOverridesForWagm
 import { Token } from "@superfluid-finance/sdk-core";
 import { toVestingToken } from "../useVestingToken";
 import { erc20ABI } from "../../../generated";
+import { Network } from "../../network/networks";
+import { ConnectionBoundaryButtonProps } from "../../transactionBoundary/ConnectionBoundaryButton";
 
 const TX_TITLE: TransactionTitle = "Disable Auto-Wrap";
 
@@ -20,12 +21,11 @@ const DisableAutoWrapTransactionButton: FC<{
   isVisible: boolean;
   isDisabled: boolean;
   ButtonProps?: ButtonProps;
-}> = ({ token, isVisible, ButtonProps = {}, ...props }) => {
-  const { network } = useExpectedNetwork();
+  network: Network;
+  ConnectionBoundaryButtonProps?: Partial<ConnectionBoundaryButtonProps>
+}> = ({ token, isVisible, ButtonProps = {}, ConnectionBoundaryButtonProps, network, ...props }) => {
   const { data: walletClient } = useWalletClient();
-
   const vestingToken = toVestingToken(token, network);
-
   const getGasOverrides = useGetTransactionOverrides();
   const { data: overrides } = useQuery(
     ["gasOverrides", TX_TITLE, network.id],
@@ -58,7 +58,6 @@ const DisableAutoWrapTransactionButton: FC<{
     chainId: network.id,
     id: vestingToken.underlyingAddress,
   });
-
   const underlyingToken = underlyingTokenQuery.data;
 
   const isButtonEnabled = prepare && config.request;
@@ -72,6 +71,7 @@ const DisableAutoWrapTransactionButton: FC<{
             ConnectionBoundaryButtonProps={{
               impersonationTitle: "Stop viewing",
               changeNetworkTitle: "Change Network",
+              ...ConnectionBoundaryButtonProps,
             }}
             disabled={isButtonDisabled}
             ButtonProps={{
@@ -98,7 +98,9 @@ const DisableAutoWrapTransactionButton: FC<{
                 transactionTitle: "Disable Auto-Wrap",
               })
                 .unwrap()
-                .then(...txAnalytics("Disable Auto-Wrap", primaryArgs))
+                .then(
+                  ...txAnalytics("Disable Auto-Wrap", primaryArgs)
+                )
                 .catch((error: unknown) => void error); // Error is already logged and handled in the middleware & UI.
             }}
           >

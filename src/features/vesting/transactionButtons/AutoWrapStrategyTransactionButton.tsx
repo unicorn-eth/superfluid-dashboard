@@ -4,13 +4,14 @@ import { BigNumber } from "ethers";
 import { FC, memo } from "react";
 import { usePrepareContractWrite, useQuery, useWalletClient } from "wagmi";
 import { autoWrapManagerABI, autoWrapManagerAddress } from "../../../generated";
-import { useExpectedNetwork } from "../../network/ExpectedNetworkContext";
 import { rpcApi } from "../../redux/store";
 import { TransactionBoundary } from "../../transactionBoundary/TransactionBoundary";
 import { TransactionButton } from "../../transactionBoundary/TransactionButton";
 import { VestingToken } from "../CreateVestingSection";
 import useGetTransactionOverrides from "../../../hooks/useGetTransactionOverrides";
 import { convertOverridesForWagmi } from "../../../utils/convertOverridesForWagmi";
+import { Network } from "../../network/networks";
+import { isEqual } from "lodash";
 
 const TX_TITLE: TransactionTitle = "Enable Auto-Wrap";
 
@@ -18,9 +19,9 @@ const AutoWrapStrategyTransactionButton: FC<{
   token: VestingToken;
   isVisible: boolean;
   isDisabled: boolean;
-}> = ({ token, isVisible, ...props }) => {
+  network: Network;
+}> = ({ token, isVisible, network, ...props }) => {
   const { data: walletClient } = useWalletClient();
-  const { network } = useExpectedNetwork();
 
   const getGasOverrides = useGetTransactionOverrides();
   const { data: overrides } = useQuery(
@@ -29,7 +30,7 @@ const AutoWrapStrategyTransactionButton: FC<{
   );
 
   const primaryArgs = {
-    superToken: token.address as `0x${string}`,
+    superToken: token.id as `0x${string}`,
     strategy: network.autoWrap!.strategyContractAddress,
     liquidityToken: token.underlyingAddress as `0x${string}`,
     expiry: BigInt(BigNumber.from("3000000000").toString()),
@@ -64,7 +65,7 @@ const AutoWrapStrategyTransactionButton: FC<{
 
   return (
     <TransactionBoundary mutationResult={mutationResult}>
-      {({ network, setDialogLoadingInfo, txAnalytics }) =>
+      {({ setDialogLoadingInfo, txAnalytics }) =>
         isVisible && (
           <TransactionButton
             disabled={isButtonDisabled}
@@ -87,7 +88,9 @@ const AutoWrapStrategyTransactionButton: FC<{
                 transactionTitle: TX_TITLE,
               })
                 .unwrap()
-                .then(...txAnalytics("Enable Auto-Wrap", primaryArgs))
+                .then(
+                  ...txAnalytics("Enable Auto-Wrap", primaryArgs)
+                )
                 .catch((error: unknown) => void error); // Error is already logged and handled in the middleware & UI.
             }}
           >

@@ -92,6 +92,28 @@ export const flowSchedulerSubgraphUrls = {
     "https://api.thegraph.com/subgraphs/name/superfluid-finance/scheduling-v1-xdai-mainnet",
 } as const;
 
+export const autoWrapSubgraphUrls = {
+  mumbai:
+    "https://api.thegraph.com/subgraphs/name/superfluid-finance/auto-wrap-v1-polygon-mumbai",
+  goerli:
+    "https://api.thegraph.com/subgraphs/name/superfluid-finance/auto-wrap-v1-eth-goerli",
+  arbitrum:
+    "https://api.thegraph.com/subgraphs/name/superfluid-finance/auto-wrap-v1-arbitrum-one",
+  avalancheC:
+    "https://api.thegraph.com/subgraphs/name/superfluid-finance/auto-wrap-v1-avalanche-c",
+  bnbSmartChain:
+    "https://api.thegraph.com/subgraphs/name/superfluid-finance/auto-wrap-v1-bsc-mainnet",
+  ethereum:
+    "https://api.thegraph.com/subgraphs/name/superfluid-finance/auto-wrap-v1-eth-mainnet",
+  optimism:
+    "https://api.thegraph.com/subgraphs/name/superfluid-finance/auto-wrap-v1-optimism-mainnet",
+  polygon:
+    "https://api.thegraph.com/subgraphs/name/superfluid-finance/auto-wrap-v1-polygon-mainnet",
+  gnosis:
+    "https://api.thegraph.com/subgraphs/name/superfluid-finance/auto-wrap-v1-xdai-mainnet",
+} as const;
+
+
 export const superfluidRpcUrls = {
   goerli: "https://rpc-endpoints.superfluid.dev/eth-goerli",
   gnosis: "https://rpc-endpoints.superfluid.dev/xdai-mainnet",

@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  ButtonProps,
   Collapse,
   IconButton,
   ListItemAvatar,
@@ -11,7 +12,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { FC, MouseEvent, memo, useEffect, useState } from "react";
+import { FC, MouseEvent, memo, useState } from "react";
 import OpenIcon from "../../components/OpenIcon/OpenIcon";
 import { useAvailableNetworks } from "./AvailableNetworksContext";
 import NetworkIcon from "./NetworkIcon";
@@ -46,7 +47,7 @@ const NetworkItem: FC<NetworkItemProps> = ({ network, selected, onClick }) => (
 
 const CollapsableMenu: FC<{
   predicates?: [(network: Network) => boolean];
-  network: Network | undefined;
+  network: Network | undefined | null;
   onNetworkSelected: (network: Network) => void;
 }> = ({ predicates = [], network: selectedNetwork, onNetworkSelected }) => {
   const [showTestnets, setShowTestnets] = useState(!!selectedNetwork?.testnet);
@@ -112,10 +113,9 @@ const CollapsableMenu: FC<{
 
 const ListedMenu: FC<{
   predicates?: [(network: Network) => boolean];
-  network: Network | undefined;
+  network: Network | undefined | null;
   onNetworkSelected: (network: Network) => void;
 }> = ({ predicates = [], network: selectedNetwork, onNetworkSelected }) => {
-  
   return (
     <>
       {allNetworks
@@ -133,7 +133,7 @@ const ListedMenu: FC<{
 };
 
 const SelectNetwork: FC<{
-  network: Network | undefined;
+  network: Network | undefined | null;
   onChange: (network: Network) => void;
   placeholder?: string;
   disabled: boolean;
@@ -141,6 +141,7 @@ const SelectNetwork: FC<{
   isCollapsable?: boolean;
   isIconButton?: boolean;
   onBlur?: () => void;
+  ButtonProps?: ButtonProps;
 }> = ({
   network: selectedNetwork,
   onChange,
@@ -149,6 +150,7 @@ const SelectNetwork: FC<{
   predicates,
   isCollapsable = true,
   isIconButton = true,
+  ButtonProps = {},
   onBlur = () => {},
 }) => {
   const theme = useTheme();
@@ -191,6 +193,7 @@ const SelectNetwork: FC<{
             ".MuiButton-endIcon": { marginLeft: "auto" },
           }}
           translate="no"
+          {...ButtonProps}
         >
           {selectedNetwork?.name || placeholder}
         </Button>

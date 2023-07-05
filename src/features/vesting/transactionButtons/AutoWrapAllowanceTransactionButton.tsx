@@ -3,7 +3,6 @@ import { TransactionTitle } from "@superfluid-finance/sdk-redux";
 import { constants } from "ethers";
 import { FC, memo } from "react";
 import { usePrepareContractWrite, useQuery, useWalletClient } from "wagmi";
-import { useExpectedNetwork } from "../../network/ExpectedNetworkContext";
 import { rpcApi, subgraphApi } from "../../redux/store";
 import { TransactionBoundary } from "../../transactionBoundary/TransactionBoundary";
 import { TransactionButton } from "../../transactionBoundary/TransactionButton";
@@ -11,6 +10,7 @@ import { VestingToken } from "../CreateVestingSection";
 import useGetTransactionOverrides from "../../../hooks/useGetTransactionOverrides";
 import { convertOverridesForWagmi } from "../../../utils/convertOverridesForWagmi";
 import { erc20ABI } from "../../../generated";
+import { Network } from "../../network/networks";
 
 const TX_TITLE: TransactionTitle = "Approve Allowance";
 
@@ -18,11 +18,9 @@ const AutoWrapAllowanceTransactionButton: FC<{
   token: VestingToken;
   isVisible: boolean;
   isDisabled: boolean;
-}> = ({ token, isVisible, ...props }) => {
-  const { network } = useExpectedNetwork();
-
+  network: Network;
+}> = ({ token, isVisible, network, ...props }) => {
   const { data: walletClient } = useWalletClient();
-
   const getGasOverrides = useGetTransactionOverrides();
   const { data: overrides } = useQuery(
     ["gasOverrides", TX_TITLE, network.id],
@@ -61,7 +59,7 @@ const AutoWrapAllowanceTransactionButton: FC<{
 
   return (
     <TransactionBoundary mutationResult={mutationResult}>
-      {({ network, setDialogLoadingInfo, txAnalytics }) =>
+      {({ setDialogLoadingInfo, txAnalytics }) =>
         isVisible && (
           <TransactionButton
             disabled={isButtonDisabled}

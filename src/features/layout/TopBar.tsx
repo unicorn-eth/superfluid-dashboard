@@ -16,6 +16,7 @@ import useBodyScrolled from "../../hooks/useBodyScrolled";
 import ImpersonationChip from "../impersonation/ImpersonationChip";
 import { useImpersonation } from "../impersonation/ImpersonationContext";
 import SelectNetwork from "../network/SelectNetwork";
+
 import { transactionDrawerWidth } from "../transactionDrawer/TransactionDrawer";
 import TransactionBell from "../transactions/TransactionBell";
 import ConnectWallet from "../wallet/ConnectWallet";
