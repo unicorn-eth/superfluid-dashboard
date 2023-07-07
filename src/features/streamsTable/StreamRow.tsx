@@ -1,10 +1,9 @@
-import AllInclusiveIcon from "@mui/icons-material/AllInclusive";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import TimerOutlined from "@mui/icons-material/TimerOutlined";
 import {
   Box,
   CircularProgress,
+  IconButton,
   ListItemText,
   Skeleton,
   Stack,
@@ -17,10 +16,10 @@ import {
   useTheme,
 } from "@mui/material";
 import { Stream } from "@superfluid-finance/sdk-core";
-import { format, isAfter } from "date-fns";
+import { format } from "date-fns";
 import { BigNumber } from "ethers";
 import { useRouter } from "next/router";
-import { FC, memo, useMemo } from "react";
+import { FC, memo } from "react";
 import AddressName from "../../components/AddressName/AddressName";
 import AddressAvatar from "../../components/Avatar/AddressAvatar";
 import {
@@ -29,7 +28,6 @@ import {
 } from "../../hooks/streamSchedulingHooks";
 import { getStreamPagePath } from "../../pages/stream/[_network]/[_stream]";
 import AddressCopyTooltip from "../common/AddressCopyTooltip";
-import TooltipWithIcon from "../common/TooltipWithIcon";
 import { Network } from "../network/networks";
 import { PendingOutgoingStream } from "../pendingUpdates/PendingOutgoingStream";
 import { UnitOfTime } from "../send/FlowRateInput";
@@ -40,6 +38,33 @@ import CancelStreamButton from "./CancelStreamButton/CancelStreamButton";
 import ModifyStreamButton from "./ModifyStreamButton";
 import { ActiveStreamIcon, ScheduledStreamIcon } from "./StreamIcons";
 import { StreamScheduling } from "./StreamScheduling";
+import Image from "next/legacy/image";
+import Link from "../common/Link";
+
+export const HumaFinanceLink: FC<{ width?: number; height?: number }> = ({
+  width = 24,
+  height = 24,
+}) => {
+  return (
+    <Tooltip title="This stream is eligible for income-based borrowing. Visit Huma to learn more.">
+      <IconButton
+        component={Link} // Link is not at network level, so we can use it as hard-coded.
+        href="https://app.huma.finance/#/borrow/stream?poolName=Superfluid"
+        target="_blank"
+      >
+        <Image
+          unoptimized
+          data-cy={"huma-finance-icon"}
+          src={"/icons/ecosystem/huma_icon.svg"}
+          height={height}
+          width={width}
+          layout="fixed"
+          alt="huma-finance logo"
+        />
+      </IconButton>
+    </Tooltip>
+  );
+};
 
 export const StreamRowLoading = () => {
   const theme = useTheme();
@@ -79,6 +104,8 @@ export const StreamRowLoading = () => {
           <TableCell>
             <Skeleton width={30} />
           </TableCell>
+          <TableCell>
+          </TableCell>
         </>
       ) : (
         <TableCell>
@@ -103,9 +130,14 @@ interface StreamRowProps {
   ) &
     StreamScheduling;
   network: Network;
+  isHumaFinanceOperatedStream: Boolean;
 }
 
-const StreamRow: FC<StreamRowProps> = ({ stream, network }) => {
+const StreamRow: FC<StreamRowProps> = ({
+  stream,
+  network,
+  isHumaFinanceOperatedStream,
+}) => {
   const {
     id,
     sender,
@@ -278,6 +310,7 @@ const StreamRow: FC<StreamRowProps> = ({ stream, network }) => {
             )}
             {!isPending && (isActive || !!startDateScheduled) && (
               <>
+                {isHumaFinanceOperatedStream && <HumaFinanceLink />}
                 {isOutgoing && (
                   <ModifyStreamButton
                     stream={stream as Stream}
