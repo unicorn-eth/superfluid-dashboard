@@ -237,6 +237,9 @@ export const networkDefinition = {
       lowerLimit: BigNumber.from(UnitOfTime.Day * 7),
       upperLimit: BigNumber.from(UnitOfTime.Day * 14),
     },
+    humaFinance: {
+      nftAddress: "0xa8B0362cfE0c8e4fd1D74c3512348d6f48d71080",
+    },
   } as const,
   polygonMumbai: {
     ...chain.polygonMumbai,
@@ -282,7 +285,7 @@ export const networkDefinition = {
       upperLimit: BigNumber.from(UnitOfTime.Day * 14),
     },
     humaFinance: {
-      nftAddress: "0x3ad49C053DCDF96788c0e40c1771d41422ddBb6A",
+      nftAddress: "0xAEA5908A082F5667aEA425AEACE8dF6aEDb03694",
     },
   } as const,
   avalancheFuji: {

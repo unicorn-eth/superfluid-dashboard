@@ -15,13 +15,21 @@ const NETWORK_BUTTONS = "[aria-label] > .MuiAvatar-root > .MuiAvatar-img";
 
 export class BridgePage extends BasePage {
   static validateFeaturedTokensAreShownOn(network: string) {
-    cy.fixture("rejectedCaseTokens").then(availableTokens => {
+    cy.fixture("rejectedCaseTokens").then((availableTokens) => {
       //The tokens user has in their wallet are shown at the top sorted by the balance , checking just 2 because 3rd is slightly overlayed
-      cy.get(TOKEN_LIST_NAMES).contains(availableTokens[network].TokenOne).should("be.visible")
-      cy.get(TOKEN_LIST_NAMES).contains(availableTokens[network].TokenTwo).should("be.visible")
-      cy.get(TOKEN_LIST_NAMES).contains(`${availableTokens[network].TokenOne}x`).should("be.visible")
-      cy.get(TOKEN_LIST_NAMES).contains(`${availableTokens[network].TokenTwo}x`).should("be.visible")
-    })
+      cy.get(TOKEN_LIST_NAMES)
+        .contains(availableTokens[network].TokenOne)
+        .should("be.visible");
+      cy.get(TOKEN_LIST_NAMES)
+        .contains(availableTokens[network].TokenTwo)
+        .should("be.visible");
+      cy.get(TOKEN_LIST_NAMES)
+        .contains(`${availableTokens[network].TokenOne}x`)
+        .should("be.visible");
+      cy.get(TOKEN_LIST_NAMES)
+        .contains(`${availableTokens[network].TokenTwo}x`)
+        .should("be.visible");
+    });
   }
   static chooseTokenToSwapFromTo(
     token: string,
@@ -31,7 +39,7 @@ export class BridgePage extends BasePage {
     cy.wrap(token).as(`${toFrom}Token`);
     cy.wrap(network).as(`${toFrom}Network`);
     cy.contains(toFrom).click();
-    this.selectBridgeNetwork(network)
+    this.selectBridgeNetwork(network);
     this.doesNotExist(LOADING_SKELETONS);
     cy.get(TOKEN_LIST_NAMES)
       .its("length")
@@ -46,8 +54,8 @@ export class BridgePage extends BasePage {
       });
   }
 
-  static selectBridgeNetwork(network:string) {
-        this.click(`${LIFI_WIDGET_CONTAINER} [aria-label=${network}]`);
+  static selectBridgeNetwork(network: string) {
+    this.click(`${LIFI_WIDGET_CONTAINER} [aria-label=${network}]`);
   }
 
   static inputSwapAmount(amount: string) {

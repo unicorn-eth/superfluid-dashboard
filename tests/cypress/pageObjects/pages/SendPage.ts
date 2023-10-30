@@ -177,11 +177,11 @@ export class SendPage extends BasePage {
     });
   }
 
-  static validateEnsEntry(ensName:string) {
-    this.hasText(ENS_ENTRY_NAMES, ensName) 
-    cy.fixture("commonData").then(data => {
-            this.hasText(ENS_ENTRY_ADDRESS, data[ensName]);
-      })
+  static validateEnsEntry(ensName: string) {
+    this.hasText(ENS_ENTRY_NAMES, ensName);
+    cy.fixture("commonData").then((data) => {
+      this.hasText(ENS_ENTRY_ADDRESS, data[ensName]);
+    });
   }
 
   static selectFirstENSResult() {

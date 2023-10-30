@@ -105,6 +105,7 @@ const TRY_SUPERFLUID_ONBOARDING_CARD =
   "[data-cy=try-out-superfluid-onboarding-card]";
 const MINIGAME_WARNING = "[data-cy=superfluid-runner-game-alert-text]";
 const MINIGAME_COMPONENT = "[data-cy=minigame-component]";
+
 const NEW_NOTIF_DATE = new Date(Date.now());
 const NEW_NOTIF_STRING_DATE =
   BasePage.getNotificationDateString(NEW_NOTIF_DATE);
@@ -236,6 +237,7 @@ export class Common extends BasePage {
   static waitForSpookySkeletonsToDisapear() {
     this.doesNotExist(LOADING_SKELETONS, undefined, { timeout: 60000 });
   }
+
   static clickNavBarButton(button: string) {
     this.click(`${NAVIGATION_BUTTON_PREFIX + button}]`);
   }
