@@ -51,9 +51,9 @@ const CustomToolbar = () => {
 type MappedVirtualStreamPeriod = VirtualStreamPeriod &
   Omit<AccountingStreamPeriod, "virtualPeriods">;
 
-interface AccountingExportPreviewProps {}
+interface AccountingExportPreviewProps { }
 
-const AccountingExportPreview: FC<AccountingExportPreviewProps> = ({}) => {
+const AccountingExportPreview: FC<AccountingExportPreviewProps> = ({ }) => {
   const { formState, getValues } = useFormContext<ValidAccountingExportForm>();
   const {
     data: {
@@ -77,15 +77,15 @@ const AccountingExportPreview: FC<AccountingExportPreviewProps> = ({}) => {
   const streamPeriodsResponse = accountingApi.useStreamPeriodsQuery(
     formState.isValid
       ? {
-          addresses,
-          chains: mainNetworks.map((x) => x.id),
-          start: getUnixTime(startDate),
-          end: getUnixTime(endDate),
-          priceGranularity: UnitOfTimeVirtualizationMap[priceGranularity],
-          virtualization: UnitOfTimeVirtualizationMap[virtualizationPeriod],
-          currency: currencyCode,
-          ...(counterparties.length > 0 ? { counterparties } : {}),
-        }
+        addresses,
+        chains: mainNetworks.map((x) => x.id),
+        start: getUnixTime(startDate),
+        end: getUnixTime(endDate),
+        priceGranularity: UnitOfTimeVirtualizationMap[priceGranularity],
+        virtualization: UnitOfTimeVirtualizationMap[virtualizationPeriod],
+        currency: currencyCode,
+        ...(counterparties.length > 0 ? { counterparties } : {}),
+      }
       : skipToken
   );
 

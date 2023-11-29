@@ -145,7 +145,8 @@ const VestingScheduleTable: FC<VestingScheduleTableProps> = ({
   const handleChangeRowsPerPage = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
+    const newRowsPerPage = rowsPerPage === -1 ? filteredVestingSchedules.length : parseInt(event.target.value, 10);
+    setRowsPerPage(newRowsPerPage);
     setPage(0);
   };
 
@@ -231,7 +232,7 @@ const VestingScheduleTable: FC<VestingScheduleTableProps> = ({
             <EmptyRow span={isBelowMd ? 2 : 6} />
           ) : (
             filteredVestingSchedules
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .slice(page * rowsPerPage, (page + 1) * rowsPerPage)
               .map((vestingSchedule) => (
                 <VestingRow
                   key={vestingSchedule.id}
@@ -250,22 +251,22 @@ const VestingScheduleTable: FC<VestingScheduleTableProps> = ({
       </Table>
       {(filteredVestingSchedules.length > 5 ||
         (!isBelowMd && filteredVestingSchedules.length <= 5)) && (
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={filteredVestingSchedules.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          sx={{
-            "> *": {
-              visibility:
-                filteredVestingSchedules.length <= 5 ? "hidden" : "visible",
-            },
-          }}
-        />
-      )}
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25, { value: filteredVestingSchedules.length, label: 'All' }]}
+            component="div"
+            count={filteredVestingSchedules.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            sx={{
+              "> *": {
+                visibility:
+                  filteredVestingSchedules.length <= 5 ? "hidden" : "visible",
+              },
+            }}
+          />
+        )}
     </TableContainer>
   );
 };
