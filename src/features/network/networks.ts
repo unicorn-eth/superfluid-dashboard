@@ -668,7 +668,6 @@ export const networkDefinition = {
     autoWrapSubgraphUrl: undefined,
     platformUrl: undefined,
   } as const,
-
   polygonZkevmTestnet: {
     ...chain.polygonZkEvmTestnet,
     id: chainIds.polygonZkevmTestnet,
@@ -749,7 +748,7 @@ export const networkDefinition = {
     blockExplorers: ensureDefined(chain.base.blockExplorers),
     slugName: "base",
     v1ShortName: "base",
-    bufferTimeInMinutes: 60,
+    bufferTimeInMinutes: 240,
     color: "#68B1D5",
     icon: "/icons/network/base.svg",
     rpcUrls: {
@@ -778,6 +777,109 @@ export const networkDefinition = {
     autoWrapSubgraphUrl: undefined,
     platformUrl: undefined,
   } as const,
+  scroll: {
+    ...chain.scroll,
+    id: chainIds.scroll,
+    blockExplorers: ensureDefined(chain.scroll.blockExplorers),
+    slugName: "scroll",
+    v1ShortName: "scroll",
+    bufferTimeInMinutes: 240,
+    color: "#fdf1e6",
+    icon: "/icons/network/scroll.svg",
+    rpcUrls: {
+      ...chain.scroll.rpcUrls,
+      superfluid: { http: [superfluidRpcUrls["scroll"]] },
+    },
+    fallbackSubgraphUrl: "https://scroll-mainnet.subgraph.x.superfluid.dev/",
+    getLinkForTransaction: (txHash: string): string =>
+      `https://scrollscan.com/tx/${txHash}`,
+    getLinkForAddress: (address: string): string =>
+      `https://scrollscan.com/address/${address}`,
+    nativeCurrency: {
+      ...ensureDefined(chain.scroll.nativeCurrency),
+      address: NATIVE_ASSET_ADDRESS,
+      type: TokenType.NativeAssetUnderlyingToken,
+      superToken: {
+        type: TokenType.NativeAssetSuperToken,
+        symbol: "ETHx",
+        address: "0x483C1716b6133cdA01237ebBF19c5a92898204B7",
+        name: "Super ETH",
+        decimals: 18,
+      },
+    },
+    vestingContractAddress: undefined,
+    vestingSubgraphUrl: undefined,
+    autoWrapSubgraphUrl: undefined,
+    platformUrl: undefined,
+  } as const,
+  scrollSepolia: {
+    ...chain.scrollSepolia,
+    id: chainIds.scrollSepolia,
+    blockExplorers: ensureDefined(chain.scrollSepolia.blockExplorers),
+    slugName: "scrsepolia",
+    v1ShortName: "scrsepolia",
+    bufferTimeInMinutes: 60,
+    color: "#fdf1e6",
+    rpcUrls: {
+      ...chain.scrollSepolia.rpcUrls,
+      superfluid: { http: [superfluidRpcUrls["scroll-sepolia"]] },
+    },
+    fallbackSubgraphUrl: "https://scroll-sepolia.subgraph.x.superfluid.dev/",
+    getLinkForTransaction: (txHash: string): string =>
+      `https://sepolia.scrollscan.com/tx/${txHash}`,
+    getLinkForAddress: (address: string): string =>
+      `https://sepolia.scrollscan.com/address/${address}`,
+    nativeCurrency: {
+      ...ensureDefined(chain.scrollSepolia.nativeCurrency),
+      address: NATIVE_ASSET_ADDRESS,
+      type: TokenType.NativeAssetUnderlyingToken,
+      superToken: {
+        type: TokenType.NativeAssetSuperToken,
+        symbol: "ETHx",
+        address: "0x58f0A7c6c143074f5D824c2f27a85f6dA311A6FB",
+        name: "Super ETH",
+        decimals: 18,
+      },
+    },
+    vestingContractAddress: undefined,
+    vestingSubgraphUrl: undefined,
+    autoWrapSubgraphUrl: undefined,
+    platformUrl: undefined,
+  } as const,
+  optimismSepolia: {
+    ...chain.optimismSepolia,
+    id: chainIds.optimismSepolia,
+    blockExplorers: ensureDefined(chain.optimismSepolia.blockExplorers),
+    slugName: "opsepolia",
+    v1ShortName: "opsepolia",
+    bufferTimeInMinutes: 60,
+    color: "#FF0320",
+    rpcUrls: {
+      ...chain.optimismSepolia.rpcUrls,
+      superfluid: { http: [superfluidRpcUrls["optimism-sepolia"]] },
+    },
+    fallbackSubgraphUrl: "https://optimism-sepolia.subgraph.x.superfluid.dev/",
+    getLinkForTransaction: (txHash: string): string =>
+      `https://sepolia-optimism.etherscan.io/tx/${txHash}`,
+    getLinkForAddress: (address: string): string =>
+      `https://sepolia-optimism.etherscan.io/address/${address}`,
+    nativeCurrency: {
+      ...ensureDefined(chain.optimismSepolia.nativeCurrency),
+      address: NATIVE_ASSET_ADDRESS,
+      type: TokenType.NativeAssetUnderlyingToken,
+      superToken: {
+        type: TokenType.NativeAssetSuperToken,
+        symbol: "ETHx",
+        address: "0x0043d7c85C8b96a49A72A92C0B48CdC4720437d7",
+        name: "Super ETH",
+        decimals: 18,
+      },
+    },
+    vestingContractAddress: undefined,
+    vestingSubgraphUrl: undefined,
+    autoWrapSubgraphUrl: undefined,
+    platformUrl: undefined,
+  } as const,
 };
 
 export const allNetworks: Network[] = orderBy(
@@ -790,6 +892,7 @@ export const allNetworks: Network[] = orderBy(
       networkDefinition.polygonMumbai,
       networkDefinition.avalancheFuji,
       networkDefinition.optimism,
+      networkDefinition.optimismSepolia,
       networkDefinition.arbitrum,
       networkDefinition.avalancheC,
       networkDefinition.bsc,
@@ -798,6 +901,8 @@ export const allNetworks: Network[] = orderBy(
       networkDefinition.polygonZkevmTestnet,
       networkDefinition.baseGoerli,
       networkDefinition.base,
+      networkDefinition.scroll,
+      // networkDefinition.scrollSepolia,
     ],
     (x) => x.id // Put lower ids first (Ethereum mainnet will be first)
   ),
