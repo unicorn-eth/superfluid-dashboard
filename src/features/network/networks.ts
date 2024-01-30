@@ -107,7 +107,10 @@ export const networkDefinition = {
   goerli: {
     ...chain.goerli,
     id: chainIds.goerli,
-    metadata: ensureDefined(sfMeta.getNetworkByChainId(chainIds.goerli), chainIds.goerli),
+    metadata: ensureDefined(
+      sfMeta.getNetworkByChainId(chainIds.goerli),
+      chainIds.goerli
+    ),
     blockExplorers: ensureDefined(chain.goerli.blockExplorers),
     slugName: "goerli",
     v1ShortName: "goerli",
@@ -151,7 +154,10 @@ export const networkDefinition = {
   gnosis: {
     name: "Gnosis Chain",
     id: chainIds.gnosis,
-    metadata: ensureDefined(sfMeta.getNetworkByChainId(chainIds.gnosis), chainIds.gnosis),
+    metadata: ensureDefined(
+      sfMeta.getNetworkByChainId(chainIds.gnosis),
+      chainIds.gnosis
+    ),
     blockExplorers: {
       etherscan: undefined!,
       default: blockExplorers.blockscout.gnosis,
@@ -204,7 +210,10 @@ export const networkDefinition = {
   polygon: {
     ...chain.polygon,
     id: chainIds.polygon,
-    metadata: ensureDefined(sfMeta.getNetworkByChainId(chainIds.polygon), chainIds.polygon),
+    metadata: ensureDefined(
+      sfMeta.getNetworkByChainId(chainIds.polygon),
+      chainIds.polygon
+    ),
     blockExplorers: ensureDefined(chain.polygon.blockExplorers),
     slugName: "polygon",
     v1ShortName: "matic",
@@ -252,7 +261,10 @@ export const networkDefinition = {
   polygonMumbai: {
     ...chain.polygonMumbai,
     id: chainIds.polygonMumbai,
-    metadata: ensureDefined(sfMeta.getNetworkByChainId(chainIds.polygonMumbai), chainIds.polygonMumbai),
+    metadata: ensureDefined(
+      sfMeta.getNetworkByChainId(chainIds.polygonMumbai),
+      chainIds.polygonMumbai
+    ),
     blockExplorers: ensureDefined(chain.polygonMumbai.blockExplorers),
     slugName: "polygon-mumbai",
     v1ShortName: "mumbai",
@@ -300,7 +312,10 @@ export const networkDefinition = {
   avalancheFuji: {
     name: "Fuji (C-Chain)",
     id: chainIds.avalancheFuji,
-    metadata: ensureDefined(sfMeta.getNetworkByChainId(chainIds.avalancheFuji), chainIds.avalancheFuji),
+    metadata: ensureDefined(
+      sfMeta.getNetworkByChainId(chainIds.avalancheFuji),
+      chainIds.avalancheFuji
+    ),
     slugName: "avalanche-fuji",
     v1ShortName: "avalanche-fuji",
     network: "avalanche-fuji",
@@ -354,7 +369,10 @@ export const networkDefinition = {
   optimism: {
     ...chain.optimism,
     id: chainIds.optimism,
-    metadata: ensureDefined(sfMeta.getNetworkByChainId(chainIds.optimism), chainIds.optimism),
+    metadata: ensureDefined(
+      sfMeta.getNetworkByChainId(chainIds.optimism),
+      chainIds.optimism
+    ),
     blockExplorers: ensureDefined(chain.optimism.blockExplorers),
     slugName: "optimism",
     v1ShortName: "optimism-mainnet",
@@ -399,7 +417,10 @@ export const networkDefinition = {
   arbitrum: {
     ...chain.arbitrum,
     id: chainIds.arbitrum,
-    metadata: ensureDefined(sfMeta.getNetworkByChainId(chainIds.arbitrum), chainIds.arbitrum),
+    metadata: ensureDefined(
+      sfMeta.getNetworkByChainId(chainIds.arbitrum),
+      chainIds.arbitrum
+    ),
     blockExplorers: ensureDefined(chain.arbitrum.blockExplorers),
     slugName: "arbitrum-one",
     v1ShortName: "arbitrum-one",
@@ -444,7 +465,10 @@ export const networkDefinition = {
   avalancheC: {
     name: "Avalanche C",
     id: chainIds.avalanche,
-    metadata: ensureDefined(sfMeta.getNetworkByChainId(chainIds.avalanche), chainIds.avalanche),
+    metadata: ensureDefined(
+      sfMeta.getNetworkByChainId(chainIds.avalanche),
+      chainIds.avalanche
+    ),
     slugName: "avalanche",
     v1ShortName: "avalanche-c",
     network: "avalanche-c",
@@ -499,7 +523,10 @@ export const networkDefinition = {
   bsc: {
     ...chain.bsc,
     id: chainIds.bsc,
-    metadata: ensureDefined(sfMeta.getNetworkByChainId(chainIds.bsc), chainIds.bsc),
+    metadata: ensureDefined(
+      sfMeta.getNetworkByChainId(chainIds.bsc),
+      chainIds.bsc
+    ),
     name: "BNB Smart Chain",
     slugName: "bsc",
     v1ShortName: "bsc-mainnet",
@@ -552,7 +579,10 @@ export const networkDefinition = {
   ethereum: {
     ...chain.mainnet,
     id: chainIds.mainnet,
-    metadata: ensureDefined(sfMeta.getNetworkByChainId(chainIds.mainnet), chainIds.mainnet),
+    metadata: ensureDefined(
+      sfMeta.getNetworkByChainId(chainIds.mainnet),
+      chainIds.mainnet
+    ),
     blockExplorers: ensureDefined(chain.mainnet.blockExplorers),
     slugName: "ethereum",
     v1ShortName: "eth",
@@ -597,7 +627,10 @@ export const networkDefinition = {
   celoMainnet: {
     ...chain.celo,
     id: chainIds.celo,
-    metadata: ensureDefined(sfMeta.getNetworkByChainId(chainIds.celo), chainIds.celo),
+    metadata: ensureDefined(
+      sfMeta.getNetworkByChainId(chainIds.celo),
+      chainIds.celo
+    ),
     blockExplorers: {
       celoscan: blockExplorers.celoscan.mainnet,
       default: blockExplorers.celoscan.mainnet,
@@ -637,7 +670,10 @@ export const networkDefinition = {
   sepolia: {
     ...chain.sepolia,
     id: chainIds.sepolia,
-    metadata: ensureDefined(sfMeta.getNetworkByChainId(chainIds.sepolia), chainIds.sepolia),
+    metadata: ensureDefined(
+      sfMeta.getNetworkByChainId(chainIds.sepolia),
+      chainIds.sepolia
+    ),
     blockExplorers: ensureDefined(chain.sepolia.blockExplorers),
     slugName: "sepolia",
     v1ShortName: "sepolia",
@@ -674,7 +710,8 @@ export const networkDefinition = {
     ...chain.polygonZkEvmTestnet,
     id: chainIds.polygonZkevmTestnet,
     metadata: ensureDefined(
-      sfMeta.getNetworkByChainId(chainIds.polygonZkevmTestnet), chainIds.polygonZkevmTestnet
+      sfMeta.getNetworkByChainId(chainIds.polygonZkevmTestnet),
+      chainIds.polygonZkevmTestnet
     ),
     blockExplorers: ensureDefined(chain.polygonZkEvmTestnet.blockExplorers),
     slugName: "polygon-zkevm-testnet",
@@ -711,7 +748,10 @@ export const networkDefinition = {
   baseGoerli: {
     ...chain.baseGoerli,
     id: chainIds.baseGoerli,
-    metadata: ensureDefined(sfMeta.getNetworkByChainId(chainIds.baseGoerli), chainIds.baseGoerli),
+    metadata: ensureDefined(
+      sfMeta.getNetworkByChainId(chainIds.baseGoerli),
+      chainIds.baseGoerli
+    ),
     blockExplorers: ensureDefined(chain.baseGoerli.blockExplorers),
     slugName: "bgoerli",
     v1ShortName: "bgoerli",
@@ -746,7 +786,10 @@ export const networkDefinition = {
   base: {
     ...chain.base,
     id: chainIds.base,
-    metadata: ensureDefined(sfMeta.getNetworkByChainId(chainIds.base), chainIds.base),
+    metadata: ensureDefined(
+      sfMeta.getNetworkByChainId(chainIds.base),
+      chainIds.base
+    ),
     blockExplorers: ensureDefined(chain.base.blockExplorers),
     slugName: "base",
     v1ShortName: "base",
@@ -782,7 +825,10 @@ export const networkDefinition = {
   scroll: {
     ...chain.scroll,
     id: chainIds.scroll,
-    metadata: ensureDefined(sfMeta.getNetworkByChainId(chainIds.scroll), chainIds.scroll),
+    metadata: ensureDefined(
+      sfMeta.getNetworkByChainId(chainIds.scroll),
+      chainIds.scroll
+    ),
     blockExplorers: ensureDefined(chain.scroll.blockExplorers),
     slugName: "scroll",
     v1ShortName: "scroll",
@@ -818,7 +864,10 @@ export const networkDefinition = {
   scrollSepolia: {
     ...chain.scrollSepolia,
     id: chainIds.scrollSepolia,
-    metadata: ensureDefined(sfMeta.getNetworkByChainId(chainIds.scrollSepolia), chainIds.scrollSepolia),
+    metadata: ensureDefined(
+      sfMeta.getNetworkByChainId(chainIds.scrollSepolia),
+      chainIds.scrollSepolia
+    ),
     blockExplorers: ensureDefined(chain.scrollSepolia.blockExplorers),
     slugName: "scrsepolia",
     v1ShortName: "scrsepolia",
@@ -854,7 +903,8 @@ export const networkDefinition = {
     ...chain.optimismSepolia,
     id: chainIds.optimismSepolia,
     metadata: ensureDefined(
-      sfMeta.getNetworkByChainId(chainIds.optimismSepolia), chainIds.optimismSepolia
+      sfMeta.getNetworkByChainId(chainIds.optimismSepolia),
+      chainIds.optimismSepolia
     ),
     blockExplorers: ensureDefined(chain.optimismSepolia.blockExplorers),
     slugName: "opsepolia",
@@ -908,7 +958,7 @@ export const allNetworks: Network[] = orderBy(
       networkDefinition.polygonZkevmTestnet,
       networkDefinition.baseGoerli,
       networkDefinition.base,
-      networkDefinition.scroll,
+      // networkDefinition.scroll,
       // networkDefinition.scrollSepolia,
     ],
     (x) => x.id // Put lower ids first (Ethereum mainnet will be first)
