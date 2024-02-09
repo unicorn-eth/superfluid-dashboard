@@ -677,7 +677,14 @@ export class SendPage extends BasePage {
 
   static isPlatformDeployedOnNetwork(fn: () => void) {
     if (
-      ["avalanche-fuji", "sepolia", "base"].includes(Cypress.env("network")) &&
+      [
+        "avalanche-fuji",
+        "sepolia",
+        "base",
+        "scroll",
+        "scrsepolia",
+        "opsepolia",
+      ].includes(Cypress.env("network")) &&
       Cypress.env("platformNeeded")
     ) {
       cy.log(

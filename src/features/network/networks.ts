@@ -879,8 +879,8 @@ export const allNetworks: Network[] = orderBy(
       networkDefinition.celoMainnet,
       networkDefinition.sepolia,
       networkDefinition.base,
-      // networkDefinition.scroll,
-      // networkDefinition.scrollSepolia,
+      networkDefinition.scroll,
+      networkDefinition.scrollSepolia,
     ],
     (x) => x.id // Put lower ids first (Ethereum mainnet will be first)
   ),
