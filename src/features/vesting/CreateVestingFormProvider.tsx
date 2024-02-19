@@ -1,5 +1,4 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import add from "date-fns/fp/add";
 import { FC, ReactNode, useEffect, useMemo, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import {
@@ -25,6 +24,7 @@ import { UnitOfTime } from "../send/FlowRateInput";
 import { useVisibleAddress } from "../wallet/VisibleAddressContext";
 import { DevTool } from "@hookform/devtools";
 import { CreateVestingFormEffects } from "./CreateVestingFormEffects";
+import { add } from "date-fns";
 
 export type ValidVestingForm = {
   data: {
@@ -168,17 +168,17 @@ const CreateVestingFormProvider: FC<{
         })) as ValidVestingForm;
 
         const cliffAndFlowDate = add(
+          startDate,
           {
             seconds: (cliffPeriod.numerator || 0) * cliffPeriod.denominator,
           },
-          startDate
         );
 
         const endDate = add(
+          startDate,
           {
             seconds: vestingPeriod.numerator * vestingPeriod.denominator,
           },
-          startDate
         );
 
         if (!vestingSchedulerConstants) {
@@ -203,11 +203,10 @@ const CreateVestingFormProvider: FC<{
           MIN_VESTING_DURATION_IN_SECONDS
         ) {
           handleHigherOrderValidationError({
-            message: `The vesting end date has to be at least ${
-              network.testnet
-                ? `${MIN_VESTING_DURATION_IN_MINUTES} minutes`
-                : `${MIN_VESTING_DURATION_IN_DAYS} days`
-            } from the start or the cliff.`,
+            message: `The vesting end date has to be at least ${network.testnet
+              ? `${MIN_VESTING_DURATION_IN_MINUTES} minutes`
+              : `${MIN_VESTING_DURATION_IN_DAYS} days`
+              } from the start or the cliff.`,
           });
         }
 
@@ -304,7 +303,7 @@ const CreateVestingFormProvider: FC<{
 
   return (
     <FormProvider {...formMethods}>
-      <DevTool control={control} />
+      {/* <DevTool control={control as any} /> */}
       {children(isInitialized)}
       <CreateVestingFormEffects />
     </FormProvider>
