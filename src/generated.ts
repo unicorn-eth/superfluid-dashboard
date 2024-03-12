@@ -6,7 +6,6 @@ import { useNetwork, useChainId } from 'wagmi'
 
 /**
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x30aE282CF477E2eF28B14d0125aCEAd57Fe1d7a1)
- * - [__View Contract on Goerli Etherscan__](https://goerli.etherscan.io/address/0x0B82D14E9616ca4d260E77454834AdCf5887595F)
  * - [__View Contract on Op Mainnet Optimism Explorer__](https://explorer.optimism.io/address/0x1fA76f2Cd0C3fe6c399A80111408d9C42C0CAC23)
  * - [__View Contract on Bnb Smart Chain Bsc Scan__](https://bscscan.com/address/0x2AcdD61ac1EFFe1535109449c31889bdE8d7f325)
  * - [__View Contract on Gnosis Gnosis Chain Explorer__](https://blockscout.com/xdai/mainnet/address/0x8082e58681350876aFe8f52d3Bf8672034A03Db0)
@@ -450,7 +449,6 @@ export const autoWrapManagerABI = [
 
 /**
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x30aE282CF477E2eF28B14d0125aCEAd57Fe1d7a1)
- * - [__View Contract on Goerli Etherscan__](https://goerli.etherscan.io/address/0x0B82D14E9616ca4d260E77454834AdCf5887595F)
  * - [__View Contract on Op Mainnet Optimism Explorer__](https://explorer.optimism.io/address/0x1fA76f2Cd0C3fe6c399A80111408d9C42C0CAC23)
  * - [__View Contract on Bnb Smart Chain Bsc Scan__](https://bscscan.com/address/0x2AcdD61ac1EFFe1535109449c31889bdE8d7f325)
  * - [__View Contract on Gnosis Gnosis Chain Explorer__](https://blockscout.com/xdai/mainnet/address/0x8082e58681350876aFe8f52d3Bf8672034A03Db0)
@@ -462,7 +460,6 @@ export const autoWrapManagerABI = [
  */
 export const autoWrapManagerAddress = {
   1: '0x30aE282CF477E2eF28B14d0125aCEAd57Fe1d7a1',
-  5: '0x0B82D14E9616ca4d260E77454834AdCf5887595F',
   10: '0x1fA76f2Cd0C3fe6c399A80111408d9C42C0CAC23',
   56: '0x2AcdD61ac1EFFe1535109449c31889bdE8d7f325',
   100: '0x8082e58681350876aFe8f52d3Bf8672034A03Db0',
@@ -475,7 +472,6 @@ export const autoWrapManagerAddress = {
 
 /**
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x30aE282CF477E2eF28B14d0125aCEAd57Fe1d7a1)
- * - [__View Contract on Goerli Etherscan__](https://goerli.etherscan.io/address/0x0B82D14E9616ca4d260E77454834AdCf5887595F)
  * - [__View Contract on Op Mainnet Optimism Explorer__](https://explorer.optimism.io/address/0x1fA76f2Cd0C3fe6c399A80111408d9C42C0CAC23)
  * - [__View Contract on Bnb Smart Chain Bsc Scan__](https://bscscan.com/address/0x2AcdD61ac1EFFe1535109449c31889bdE8d7f325)
  * - [__View Contract on Gnosis Gnosis Chain Explorer__](https://blockscout.com/xdai/mainnet/address/0x8082e58681350876aFe8f52d3Bf8672034A03Db0)

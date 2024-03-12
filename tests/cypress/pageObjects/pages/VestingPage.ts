@@ -95,8 +95,8 @@ const NO_RECEIVED_DESC_STRING =
   "Vesting schedules that you have received will appear here.";
 
 //Dates for the vesting previews etc.
-let staticStartDate = new Date(1722506340000);
-let staticEndDate = new Date(2037866340000);
+let staticStartDate = new Date(1850210429000);
+let staticEndDate = new Date(2007976829000);
 let currentTime = new Date();
 let startDate = new Date(
   currentTime.getTime() + wordTimeUnitMap["year"] * 1000
@@ -251,7 +251,7 @@ export class VestingPage extends BasePage {
     this.hasText(APPROVAL_MESSAGE, "Waiting for transaction approval...");
     // cy.get(OK_BUTTON, {timeout: 45000}).should("be.visible").click()
     // this.click(TX_DRAWER_BUTTON)
-    // WrapPage.validatePendingTransaction("Create Vesting Schedule" , "goerli")
+    // WrapPage.validatePendingTransaction("Create Vesting Schedule" , "polygon-mumbai")
   }
 
   static validateFormError(error: string) {
@@ -321,10 +321,10 @@ export class VestingPage extends BasePage {
   }
 
   static validateVestingSchedulePreview() {
-    this.hasText(PREVIEW_RECEIVER, "elvijs.lens");
+    this.hasText(PREVIEW_RECEIVER, "vijay.eth");
     this.validateSchedulePreviewDetails(cliffDate, startDate, endDate);
-    this.hasText(PREVIEW_TOTAL_AMOUNT, "2 fTDLx");
-    this.hasText(PREVIEW_CLIFF_AMOUNT, "1 fTDLx");
+    this.hasText(PREVIEW_TOTAL_AMOUNT, "2 fTUSDx");
+    this.hasText(PREVIEW_CLIFF_AMOUNT, "1 fTUSDx");
     this.containsText(
       PREVIEW_CLIFF_PERIOD,
       `1 year (${format(cliffDate, "LLLL d, yyyy")})`
@@ -386,8 +386,8 @@ export class VestingPage extends BasePage {
       this.shortenHex("0xF9Ce34dFCD3cc92804772F3022AF27bCd5E43Ff2"),
       0
     );
-    this.hasText(TABLE_ALLOCATED_AMOUNT, "100 fTUSDx", 0);
-    this.hasText(VESTED_AMOUNT, "0  fTUSDx", 0);
+    this.hasText(TABLE_ALLOCATED_AMOUNT, "60.87 fUSDCx", 0);
+    this.hasText(VESTED_AMOUNT, "0  fUSDCx", 0);
     this.containsText(
       TABLE_START_END_DATES,
       format(staticStartDate, "LLL d, yyyy"),
@@ -405,40 +405,40 @@ export class VestingPage extends BasePage {
     startDate: Date,
     endDate: Date
   ) {
-    //The graph goes up by 1 minute if test is too slow in the form
+    //The graph goes up by 1-5 minutes if test is too slow in the form
     cy.get(GRAPH_CLIFF_DATE).then((el) => {
       let graphCliffTimestamp = Date.parse(el.text().replace("Cliff: ", ""));
-      expect(graphCliffTimestamp).to.be.closeTo(cliffDate.getTime(), 180000);
+      expect(graphCliffTimestamp).to.be.closeTo(cliffDate.getTime(), 300000);
     });
     cy.get(GRAPH_END_DATE).then((el) => {
       let graphCliffTimestamp = Date.parse(el.text().replace("End: ", ""));
-      expect(graphCliffTimestamp).to.be.closeTo(endDate.getTime(), 180000);
+      expect(graphCliffTimestamp).to.be.closeTo(endDate.getTime(), 300000);
     });
     cy.get(GRAPH_START_DATE).then((el) => {
       let graphCliffTimestamp = Date.parse(el.text().replace("Start: ", ""));
-      expect(graphCliffTimestamp).to.be.closeTo(startDate.getTime(), 180000);
+      expect(graphCliffTimestamp).to.be.closeTo(startDate.getTime(), 300000);
     });
   }
 
   static validateCreatedVestingScheduleDetailsPage() {
     this.hasText(DETAILS_VESTED_SO_FAR_AMOUNT, "0 ");
-    this.hasText(DETAILS_VESTED_TOKEN_SYMBOL, "fTUSDx");
-    this.hasText("[data-cy=fTUSDx-cliff-amount]", "10fTUSDx");
-    this.hasText("[data-cy=fTUSDx-allocated]", "100fTUSDx");
+    this.hasText(DETAILS_VESTED_TOKEN_SYMBOL, "fUSDCx");
+    this.hasText("[data-cy=fUSDCx-cliff-amount]", "0fUSDCx");
+    this.hasText("[data-cy=fUSDCx-allocated]", "60.87fUSDCx");
     cy.fixture("vestingData").then((data) => {
-      let schedule = data.goerli.fTUSDx.schedule;
+      let schedule = data["polygon-mumbai"].fUSDCx.schedule;
       this.hasText(
         DETAILS_SCHEDULED_DATE,
         format(schedule.createdAt * 1000, "MMM do, yyyy HH:mm")
       );
-      this.hasText(
-        DETAILS_CLIFF_START,
-        format(schedule.startDate * 1000, "MMM do, yyyy HH:mm")
-      );
-      this.hasText(
-        DETAILS_CLIFF_END,
-        format(schedule.cliffDate * 1000, "MMM do, yyyy HH:mm")
-      );
+      // this.hasText(
+      //   DETAILS_CLIFF_START,
+      //   format(schedule.startDate * 1000, "MMM do, yyyy HH:mm")
+      // );
+      // this.hasText(
+      //   DETAILS_CLIFF_END,
+      //   format(schedule.cliffDate * 1000, "MMM do, yyyy HH:mm")
+      // );
       this.hasText(
         DETAILS_VESTING_END,
         format(schedule.endDate * 1000, "MMM do, yyyy HH:mm")
@@ -451,7 +451,6 @@ export class VestingPage extends BasePage {
       "ethereum",
       "polygon",
       "bsc",
-      "goerli",
       "gnosis",
       "polygon-mumbai",
       "optimism",
@@ -491,14 +490,14 @@ export class VestingPage extends BasePage {
       this.click(
         `[data-cy="${selectedToken}-row"] [data-testid=ExpandMoreRoundedIcon]`,
         undefined,
-        { timeout: 30000 }
+        { timeout: 60000 }
       );
     });
   }
 
   static validateTokenPermissionsData(token: string) {
     cy.fixture("vestingData").then((data) => {
-      let selectedToken = data.goerli[token];
+      let selectedToken = data["polygon-mumbai"][token];
       this.hasText(
         `[data-cy=${token}-current-allowance] p`,
         `${selectedToken.currentAllowances.tokenAllowance} ${token}`

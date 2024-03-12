@@ -64,6 +64,8 @@ const MUI_PRESENTATION = ".MuiDialog-root [role=presentation]";
 const FAUCET_WALLET_ADDRESS = "[data-cy=connected-address] input";
 const TOKEN_CHIPS = ".MuiChip-root";
 const FAUCET_CONTRACT_ADDRESS = "0x74CDF863b00789c29734F8dFd9F83423Bc55E4cE";
+const FAUCET_EXECUTION_CONTRACT_ADDRESS =
+  "0x2e043853CC01ccc8275A3913B82F122C20Bc1256";
 const NOTIFICATIONS_BUTTON = "[data-testid=NotificationsIcon]";
 const NOTIF_SETTINGS_BUTTON = "[data-testid=SettingsOutlinedIcon]";
 const NOTIF_ARCHIVE_BUTTON = "[data-cy=archive-button]";
@@ -205,17 +207,15 @@ export class Common extends BasePage {
   }
 
   static validateLensEntryIsVisible(account: string) {
-    cy.get(LENS_NAMES).contains(account).should("be.visible");
+    cy.get(LENS_NAMES, { timeout: 30000 })
+      .contains(account)
+      .should("be.visible");
   }
   static validateLensImageIsLoaded(account: string) {
     cy.fixture("ensAndLensAvatarUrls").then((urls) => {
-      this.hasAttributeWithValue(
-        ADDRESS_SEARCH_AVATAR_IMAGES,
-        "src",
-        urls[account],
-        0,
-        { timeout: 30000 }
-      ).should("be.visible");
+      cy.get(ADDRESS_SEARCH_AVATAR_IMAGES, { timeout: 30000 })
+        .should("have.attr", "src", urls[account])
+        .and("be.visible");
     });
   }
   static clickOnFirstLensEntry() {
@@ -334,12 +334,20 @@ export class Common extends BasePage {
       //The nextjs error is annoying when developing test cases in dev mode
       cy.get("nextjs-portal").shadow().find("[aria-label=Close]").click();
     }
-
+    this.doesNotExist(`${CONNECTED_WALLET_BUTTON} span circle`);
     this.changeNetwork(selectedNetwork);
-    let workaroundNetwork =
-      selectedNetwork === "goerli" ? "avalanche-fuji" : "goerli";
-    this.changeNetwork(workaroundNetwork);
-    this.changeNetwork(selectedNetwork);
+    //Conditional testing is bad, but this way is better than re-trying the whole case
+    //A workaround because sometimes HDWalletProvider does not connect to the right network
+    cy.get(WALLET_CONNECTION_STATUS).then((el) => {
+      if (el.text() === "Wrong network") {
+        let workaroundNetwork =
+          selectedNetwork === "polygon-mumbai"
+            ? "avalanche-fuji"
+            : "polygon-mumbai";
+        this.changeNetwork(workaroundNetwork);
+        this.changeNetwork(selectedNetwork);
+      }
+    });
   }
 
   static rejectTransactions() {
@@ -399,7 +407,13 @@ export class Common extends BasePage {
   }
 
   static typeIntoAddressInput(address: string) {
-    this.type(ADDRESS_DIALOG_INPUT, address);
+    if (address.includes(".lens")) {
+      cy.intercept("**api.lens.dev**").as("lensQuery");
+      this.type(ADDRESS_DIALOG_INPUT, address);
+      cy.wait("@lensQuery", { timeout: 30000 });
+    } else {
+      this.type(ADDRESS_DIALOG_INPUT, address);
+    }
   }
 
   static clickOnViewModeButton() {
@@ -503,7 +517,7 @@ export class Common extends BasePage {
         return false;
       }
     });
-    cy.get(TX_ERROR, { timeout: 45000 }).should(
+    cy.get(TX_ERROR, { timeout: 60000 }).should(
       "have.text",
       "Transaction Rejected"
     );
@@ -806,6 +820,13 @@ export class Common extends BasePage {
       return web3.eth.getBalance(FAUCET_CONTRACT_ADDRESS).then((balance) => {
         expect(parseInt(balance)).to.be.greaterThan(1e19);
       });
+    });
+    cy.wrap(null, { log: false }).then(() => {
+      return web3.eth
+        .getBalance(FAUCET_EXECUTION_CONTRACT_ADDRESS)
+        .then((balance) => {
+          expect(parseInt(balance)).to.be.greaterThan(5e18);
+        });
     });
   }
 
@@ -1208,8 +1229,8 @@ export class Common extends BasePage {
           "v1 ended stream details page":
             streamData["staticBalanceAccount"]["polygon"][0].v1Link,
           "close-ended stream details page":
-            streamData["accountWithLotsOfData"]["polygon"][0].v2Link,
-          "vesting details page": `/vesting/goerli/${vestingData.goerli.fTUSDx.schedule.id}`,
+            streamData["john"]["polygon-mumbai"][0].v2Link,
+          "vesting details page": `/vesting/polygon-mumbai/${vestingData["polygon-mumbai"].fUSDCx.schedule.id}`,
           "vesting stream details page": `/stream/polygon/${vestingData.polygon.USDCx.vestingStream.id}`,
           "404 token page": "/token/polygon/Testing420HaveANiceDay",
           "404 vesting page": "/vesting/polygon/Testing",

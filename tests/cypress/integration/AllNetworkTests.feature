@@ -11,7 +11,6 @@ Feature: Test cases that run indefinitely on all supported networks
 
         Examples:
             | network        | token |
-            | goerli         | ETH   |
             | polygon-mumbai | MATIC |
             | avalanche-fuji | AVAX  |
             | gnosis         | XDAI  |
@@ -32,7 +31,6 @@ Feature: Test cases that run indefinitely on all supported networks
 
         Examples:
             | network        |
-            | goerli         |
             | polygon-mumbai |
             | avalanche-fuji |
             | gnosis         |
@@ -48,28 +46,25 @@ Feature: Test cases that run indefinitely on all supported networks
             | scrsepolia     |
             | opsepolia      |
 
-    # Add back once cypress uses superfluid rpc
-    #| polygon-zkevm-testnet |
     Scenario Outline: The graph is not behind on <network>
         Given The graph is not more then 10 minutes behind on <network>
 
         Examples:
-            | network               |
-            | goerli                |
-            | polygon-mumbai        |
-            | avalanche-fuji        |
-            | gnosis                |
-            | polygon               |
-            | optimism              |
-            | arbitrum-one          |
-            | avalanche             |
-            | bsc                   |
-            | celo                  |
-            | sepolia               |
-            | base                  |
-            | scroll                |
-            | scrsepolia            |
-            | opsepolia             |
+            | network        |
+            | polygon-mumbai |
+            | avalanche-fuji |
+            | gnosis         |
+            | polygon        |
+            | optimism       |
+            | arbitrum-one   |
+            | avalanche      |
+            | bsc            |
+            | celo           |
+            | sepolia        |
+            | base           |
+            | scroll         |
+            | scrsepolia     |
+            | opsepolia      |
 
     Scenario: Testnet faucet fund check
         Given The faucet contract has got enough funds to send to people

@@ -1,14 +1,14 @@
 import { Contract } from 'ethers';
-import goerli_flowScheduler_abi from '../../abis/goerli/flowScheduler.json';
+import polygonMumbai_flowScheduler_abi from '../../abis/polygonMumbai/flowScheduler.json';
 import mainnet_vestingScheduler_abi from '../../abis/mainnet/vestingScheduler.json';
 import mainnet_autoWrapManager_abi from '../../abis/mainnet/autoWrapManager.json';
 import mainnet_autoWrapStrategy_abi from '../../abis/mainnet/autoWrapStrategy.json';
 export function getContract(address, abi, defaultSignerOrProvider) {
     return new Contract(address, abi, defaultSignerOrProvider);
 }
-export function getGoerliSdk(defaultSignerOrProvider) {
+export function getPolygonMumbaiSdk(defaultSignerOrProvider) {
     return {
-        "flowScheduler": getContract('0xf428308b426D7cD7Ad8eBE549d750f31C8E060Ca', goerli_flowScheduler_abi, defaultSignerOrProvider),
+        "flowScheduler": getContract('0x59A3Ba9d34c387FB70b4f4e4Fbc9eD7519194139', polygonMumbai_flowScheduler_abi, defaultSignerOrProvider),
     };
 }
 export function getMainnetSdk(defaultSignerOrProvider) {
