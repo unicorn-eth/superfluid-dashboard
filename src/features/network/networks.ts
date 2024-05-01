@@ -723,10 +723,12 @@ export const networkDefinition = {
         decimals: 18,
       },
     },
-    vestingContractAddress: undefined,
-    vestingSubgraphUrl: undefined,
-    autoWrapSubgraphUrl: undefined,
-    platformUrl: undefined,
+    vestingContractAddress: vestingContractAddresses.base,
+    vestingSubgraphUrl: vestingSubgraphUrls.base,
+    autoWrapSubgraphUrl: autoWrapSubgraphUrls.base,
+    flowSchedulerContractAddress: flowSchedulerContractAddresses.base,
+    flowSchedulerSubgraphUrl: flowSchedulerSubgraphUrls.base,
+    platformUrl: superfluidPlatformUrls.base,
   },
   scroll: {
     ...chain.scroll,
@@ -815,6 +817,7 @@ export const networkDefinition = {
       sfMeta.getNetworkByChainId(chainIds.optimismSepolia),
       chainIds.optimismSepolia
     ),
+    testnet: true,
     blockExplorers: ensureDefined(chain.optimismSepolia.blockExplorers),
     slugName: "opsepolia",
     v1ShortName: "opsepolia",
@@ -841,9 +844,11 @@ export const networkDefinition = {
         decimals: 18,
       },
     },
-    vestingContractAddress: undefined,
-    vestingSubgraphUrl: undefined,
-    autoWrapSubgraphUrl: undefined,
+    vestingContractAddress: vestingContractAddresses.optimismSepolia,
+    vestingSubgraphUrl: vestingSubgraphUrls.optimismSepolia,
+    autoWrapSubgraphUrl: autoWrapSubgraphUrls.optimismSepolia,
+    flowSchedulerContractAddress: flowSchedulerContractAddresses.optimismSepolia,
+    flowSchedulerSubgraphUrl: flowSchedulerSubgraphUrls.optimismSepolia,
     platformUrl: undefined,
   },
 } as const satisfies Record<string, Network>;
@@ -936,8 +941,9 @@ export const getNetworkDefaultTokenPair = memoize(
 
 // The vesting contract might be deployed to more networks but we check for the existence of the Platform.;
 export const vestingSupportedNetworks = allNetworks
-  .filter((network) => network.platformUrl)
-  .concat([networkDefinition.base]) // TODO: Remove when The Platform is deployed to Base.
+  .filter(
+    (network) => network.vestingContractAddress
+  )
   .sort((n1, n2) => (!n1.testnet && n2.testnet ? -1 : 1));
 
 export const deprecatedNetworkChainIds = [
