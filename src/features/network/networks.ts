@@ -19,7 +19,8 @@ import {
   flowSchedulerSubgraphUrls,
   superfluidPlatformUrls,
   superfluidRpcUrls,
-  vestingContractAddresses,
+  vestingContractAddresses_v1,
+  vestingContractAddresses_v2,
   vestingSubgraphUrls,
 } from "./networkConstants";
 import { BigNumber, BigNumberish } from "ethers";
@@ -27,17 +28,17 @@ import { UnitOfTime } from "../send/FlowRateInput";
 import { ChainBlockExplorer } from "viem/_types/types/chain";
 
 const getMetadata = memoize((chainId: number) => {
-  const metadata = sfMeta.getNetworkByChainId(chainId)
+  const metadata = sfMeta.getNetworkByChainId(chainId);
   if (!metadata) {
-    throw new Error(`No metadata for chainId ${chainId}`)
+    throw new Error(`No metadata for chainId ${chainId}`);
   }
-  return metadata
-})
+  return metadata;
+});
 
 const getSupportsGDA = (chainId: number) => {
-  const metadata = getMetadata(chainId)
-  return Boolean(metadata.contractsV1.gdaV1)
-}
+  const metadata = getMetadata(chainId);
+  return Boolean(metadata.contractsV1.gdaV1);
+};
 
 type NetworkMetadata = (typeof sfMeta.networks)[number];
 
@@ -63,7 +64,8 @@ export type Network = Chain & {
   supportsGDA: boolean;
   flowSchedulerContractAddress?: `0x${string}`;
   flowSchedulerSubgraphUrl?: `https://${string}` | undefined;
-  vestingContractAddress: `0x${string}` | undefined;
+  vestingContractAddress_v1: `0x${string}` | undefined;
+  vestingContractAddress_v2: `0x${string}` | undefined;
   vestingSubgraphUrl: `https://${string}` | undefined;
   autoWrapSubgraphUrl: `https://${string}` | undefined;
   platformUrl: string | undefined;
@@ -168,7 +170,8 @@ export const networkDefinition = {
     },
     flowSchedulerContractAddress: flowSchedulerContractAddresses.gnosis,
     flowSchedulerSubgraphUrl: flowSchedulerSubgraphUrls.gnosis,
-    vestingContractAddress: vestingContractAddresses.gnosis,
+    vestingContractAddress_v1: vestingContractAddresses_v1.gnosis,
+    vestingContractAddress_v2: undefined,
     vestingSubgraphUrl: vestingSubgraphUrls.gnosis,
     autoWrapSubgraphUrl: autoWrapSubgraphUrls.gnosis,
     platformUrl: superfluidPlatformUrls.gnosis,
@@ -215,7 +218,8 @@ export const networkDefinition = {
     },
     flowSchedulerContractAddress: flowSchedulerContractAddresses.polygon,
     flowSchedulerSubgraphUrl: flowSchedulerSubgraphUrls.polygon,
-    vestingContractAddress: vestingContractAddresses.polygon,
+    vestingContractAddress_v1: vestingContractAddresses_v1.polygon,
+    vestingContractAddress_v2: undefined,
     vestingSubgraphUrl: vestingSubgraphUrls.polygon,
     autoWrapSubgraphUrl: autoWrapSubgraphUrls.polygon,
     platformUrl: superfluidPlatformUrls.polygon,
@@ -273,7 +277,8 @@ export const networkDefinition = {
     },
     flowSchedulerContractAddress: undefined,
     flowSchedulerSubgraphUrl: undefined,
-    vestingContractAddress: undefined,
+    vestingContractAddress_v1: undefined,
+    vestingContractAddress_v2: undefined,
     vestingSubgraphUrl: undefined,
     autoWrapSubgraphUrl: undefined,
     platformUrl: undefined,
@@ -321,7 +326,8 @@ export const networkDefinition = {
     },
     flowSchedulerContractAddress: flowSchedulerContractAddresses.optimism,
     flowSchedulerSubgraphUrl: flowSchedulerSubgraphUrls.optimism,
-    vestingContractAddress: vestingContractAddresses.optimism,
+    vestingContractAddress_v1: vestingContractAddresses_v1.optimism,
+    vestingContractAddress_v2: vestingContractAddresses_v2.optimism,
     vestingSubgraphUrl: vestingSubgraphUrls.optimism,
     autoWrapSubgraphUrl: autoWrapSubgraphUrls.optimism,
     platformUrl: superfluidPlatformUrls.optimism,
@@ -368,7 +374,8 @@ export const networkDefinition = {
     },
     flowSchedulerContractAddress: flowSchedulerContractAddresses.arbitrum,
     flowSchedulerSubgraphUrl: flowSchedulerSubgraphUrls.arbitrum,
-    vestingContractAddress: vestingContractAddresses.arbitrum,
+    vestingContractAddress_v1: vestingContractAddresses_v1.arbitrum,
+    vestingContractAddress_v2: undefined,
     vestingSubgraphUrl: vestingSubgraphUrls.arbitrum,
     autoWrapSubgraphUrl: autoWrapSubgraphUrls.arbitrum,
     platformUrl: superfluidPlatformUrls.arbitrum,
@@ -425,7 +432,8 @@ export const networkDefinition = {
     },
     flowSchedulerContractAddress: flowSchedulerContractAddresses.avalancheC,
     flowSchedulerSubgraphUrl: flowSchedulerSubgraphUrls.avalancheC,
-    vestingContractAddress: vestingContractAddresses.avalancheC,
+    vestingContractAddress_v1: vestingContractAddresses_v1.avalancheC,
+    vestingContractAddress_v2: undefined,
     vestingSubgraphUrl: vestingSubgraphUrls.avalancheC,
     autoWrapSubgraphUrl: autoWrapSubgraphUrls.avalancheC,
     platformUrl: superfluidPlatformUrls.avalancheC,
@@ -480,7 +488,8 @@ export const networkDefinition = {
     },
     flowSchedulerContractAddress: flowSchedulerContractAddresses.bnbSmartChain,
     flowSchedulerSubgraphUrl: flowSchedulerSubgraphUrls.bnbSmartChain,
-    vestingContractAddress: vestingContractAddresses.bnbSmartChain,
+    vestingContractAddress_v1: vestingContractAddresses_v1.bnbSmartChain,
+    vestingContractAddress_v2: undefined,
     vestingSubgraphUrl: vestingSubgraphUrls.bnbSmartChain,
     autoWrapSubgraphUrl: autoWrapSubgraphUrls.bnbSmartChain,
     platformUrl: superfluidPlatformUrls.bnbSmartChain,
@@ -527,7 +536,8 @@ export const networkDefinition = {
     },
     flowSchedulerContractAddress: flowSchedulerContractAddresses.ethereum,
     flowSchedulerSubgraphUrl: flowSchedulerSubgraphUrls.ethereum,
-    vestingContractAddress: vestingContractAddresses.ethereum,
+    vestingContractAddress_v1: vestingContractAddresses_v1.ethereum,
+    vestingContractAddress_v2: undefined,
     vestingSubgraphUrl: vestingSubgraphUrls.ethereum,
     autoWrapSubgraphUrl: autoWrapSubgraphUrls.ethereum,
     platformUrl: superfluidPlatformUrls.ethereum,
@@ -575,7 +585,8 @@ export const networkDefinition = {
         decimals: 18,
       },
     },
-    vestingContractAddress: undefined,
+    vestingContractAddress_v1: undefined,
+    vestingContractAddress_v2: undefined,
     vestingSubgraphUrl: undefined,
     autoWrapSubgraphUrl: undefined,
     platformUrl: undefined,
@@ -625,7 +636,8 @@ export const networkDefinition = {
         decimals: 18,
       },
     },
-    vestingContractAddress: undefined,
+    vestingContractAddress_v1: undefined,
+    vestingContractAddress_v2: undefined,
     vestingSubgraphUrl: undefined,
     autoWrapSubgraphUrl: undefined,
     platformUrl: undefined,
@@ -663,7 +675,8 @@ export const networkDefinition = {
         decimals: 18,
       },
     },
-    vestingContractAddress: undefined,
+    vestingContractAddress_v1: undefined,
+    vestingContractAddress_v2: undefined,
     vestingSubgraphUrl: undefined,
     autoWrapSubgraphUrl: undefined,
     platformUrl: undefined,
@@ -702,7 +715,8 @@ export const networkDefinition = {
         decimals: 18,
       },
     },
-    vestingContractAddress: vestingContractAddresses.base,
+    vestingContractAddress_v1: vestingContractAddresses_v1.base,
+    vestingContractAddress_v2: undefined,
     vestingSubgraphUrl: vestingSubgraphUrls.base,
     autoWrapSubgraphUrl: autoWrapSubgraphUrls.base,
     autoWrap: {
@@ -749,7 +763,8 @@ export const networkDefinition = {
         decimals: 18,
       },
     },
-    vestingContractAddress: undefined,
+    vestingContractAddress_v1: undefined,
+    vestingContractAddress_v2: undefined,
     vestingSubgraphUrl: undefined,
     autoWrapSubgraphUrl: undefined,
     platformUrl: undefined,
@@ -787,7 +802,8 @@ export const networkDefinition = {
         decimals: 18,
       },
     },
-    vestingContractAddress: undefined,
+    vestingContractAddress_v1: undefined,
+    vestingContractAddress_v2: undefined,
     vestingSubgraphUrl: undefined,
     autoWrapSubgraphUrl: undefined,
     platformUrl: undefined,
@@ -826,7 +842,8 @@ export const networkDefinition = {
         decimals: 18,
       },
     },
-    vestingContractAddress: vestingContractAddresses.optimismSepolia,
+    vestingContractAddress_v1: vestingContractAddresses_v1.optimismSepolia,
+    vestingContractAddress_v2: vestingContractAddresses_v2.optimismSepolia,
     vestingSubgraphUrl: vestingSubgraphUrls.optimismSepolia,
     autoWrapSubgraphUrl: autoWrapSubgraphUrls.optimismSepolia,
     autoWrap: {
@@ -927,10 +944,10 @@ export const getNetworkDefaultTokenPair = memoize(
   })
 );
 
-// The vesting contract might be deployed to more networks but we check for the existence of the Platform.;
 export const vestingSupportedNetworks = allNetworks
   .filter(
-    (network) => network.vestingContractAddress
+    (network) =>
+      network.vestingContractAddress_v1 || network.vestingContractAddress_v2
   )
   .sort((n1, n2) => (!n1.testnet && n2.testnet ? -1 : 1));
 
