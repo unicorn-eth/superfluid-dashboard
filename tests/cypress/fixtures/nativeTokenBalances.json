@@ -49,7 +49,7 @@
       }
     },
     "sepolia": {
-      "SEP": {
+      "ETH": {
         "underlyingBalance": "0",
         "superTokenBalance": "0"
       }
@@ -80,7 +80,7 @@
     },
     "opsepolia": {
       "ETH": {
-        "underlyingBalance": "0",
+        "underlyingBalance": "0.4975",
         "superTokenBalance": "0"
       }
     },

@@ -16,7 +16,7 @@ export class EthHelper {
   constructor(networkName: string, privateKey: string) {
     const rpcUrl =
       "https://rpc-endpoints.superfluid.dev/" +
-      this.getNetworkByName(networkName).name;
+      this.getNetworkByShortName(networkName).name;
     this.provider = new ethers.providers.JsonRpcProvider(rpcUrl);
     this.wallet = new ethers.Wallet(privateKey, this.provider);
     this.networkName = networkName;
@@ -28,6 +28,10 @@ export class EthHelper {
 
   public getNetworkByName(name: string) {
     return sfMeta.networks.filter((n) => n.name === name)[0];
+  }
+
+  public getNetworkByShortName(name: string) {
+    return sfMeta.networks.filter((n) => n.shortName === name)[0];
   }
 
   public getTokenBySymbolAndChainId(symbol: string, chainId: number) {
@@ -46,7 +50,7 @@ export class EthHelper {
     tokenSymbol: string,
     contractToRevokeAllowanceTo: string
   ) {
-    let chainId = this.getNetworkByName(this.networkName).chainId;
+    let chainId = this.getNetworkByShortName(this.networkName).chainId;
     const token = new ethers.Contract(
       this.getTokenBySymbolAndChainId(tokenSymbol, chainId).address,
       erc20ABI,
@@ -82,12 +86,12 @@ export class EthHelper {
     sender: string,
     receiver: string
   ) {
-    const chainId = this.getNetworkByName(this.networkName).chainId;
+    const chainId = this.getNetworkByShortName(this.networkName).chainId;
     const tokenAddress = this.getTokenBySymbolAndChainId(
       tokenSymbol,
       chainId
     ).address;
-    let cfaV1ForwarderAddress = this.getNetworkByName(this.networkName)
+    let cfaV1ForwarderAddress = this.getNetworkByShortName(this.networkName)
       .contractsV1.cfaV1Forwarder;
 
     const CFAv1Forwarder = new ethers.Contract(
@@ -123,12 +127,12 @@ export class EthHelper {
     receiver: string,
     flowRate: string
   ) {
-    const chainId = this.getNetworkByName(this.networkName).chainId;
+    const chainId = this.getNetworkByShortName(this.networkName).chainId;
     const tokenAddress = this.getTokenBySymbolAndChainId(
       tokenSymbol,
       chainId
     ).address;
-    let cfaV1ForwarderAddress = this.getNetworkByName(this.networkName)
+    let cfaV1ForwarderAddress = this.getNetworkByShortName(this.networkName)
       .contractsV1.cfaV1Forwarder;
 
     const CFAv1Forwarder = new ethers.Contract(
@@ -162,7 +166,7 @@ export class EthHelper {
     tokenSymbol: string,
     addressToCheckBalanceOf = process.env.AVERAGEX_WALLET_PUBLIC_KEY
   ) {
-    let chainId = this.getNetworkByName(this.networkName).chainId;
+    let chainId = this.getNetworkByShortName(this.networkName).chainId;
     const token = new ethers.Contract(
       this.getTokenBySymbolAndChainId(tokenSymbol, chainId).address,
       erc20ABI,
@@ -175,7 +179,7 @@ export class EthHelper {
     tokenSymbol: string,
     addressToCheckBalanceOf = process.env.AVERAGEX_WALLET_PUBLIC_KEY
   ) {
-    let chainId = this.getNetworkByName(this.networkName).chainId;
+    let chainId = this.getNetworkByShortName(this.networkName).chainId;
     const token = new ethers.Contract(
       this.getTokenBySymbolAndChainId(tokenSymbol, chainId).address,
       superTokenABI,

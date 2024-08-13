@@ -271,26 +271,9 @@ const mapTransactionActivityRecursive = (
     }
 
     case "IndexUpdated":
-      return mapTransactionActivityRecursive(
-        transactionEvents,
-        network,
-        activities.concat([
-          {
-            keyEvent,
-            network,
-          } as Activity,
-        ])
-      );
-
-    case "Transfer": {
-      return mapTransactionActivityRecursive(
-        transactionEvents,
-        network,
-        activities
-      );
-    }
-    case "FlowUpdated":
     case "IndexCreated":
+    case "FlowUpdated":
+    case "Transfer":
       return mapTransactionActivityRecursive(
         transactionEvents,
         network,

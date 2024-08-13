@@ -13,7 +13,7 @@ jobs:
       netlify_url: ${{ steps.waitForDeployment.outputs.url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
@@ -33,32 +33,55 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        container: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+        container:
+          [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+          ]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         #In order to change the default behaviour and checkout the triggering commit ,
         #e.g. don't show Merge 23452345234523452345 into 34563456345634563456 but the actual commit that triggered the workflow in the test results
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
         with:
-          node-version: 18.x
-          cache: "yarn"
+          node-version: 20.x
 
       #A workaround for Cypress to work with Currents https://github.com/currents-dev/gh-actions-example/blob/main/.github/workflows/currents.yml
       # Install Currents
       - name: Install dependencies
         run: |
-          yarn install
+          pnpm i
 
       - name: Unblock Cypress
         working-directory: "tests"
         run: |
           echo 🕊️ Download Free Cypress
-          CYPRESS_DOWNLOAD_MIRROR=https://cy-cdn.currents.dev yarn add cypress@12.17.4 --force
+          CYPRESS_DOWNLOAD_MIRROR=https://cy-cdn.currents.dev pnpm add cypress@12.17.4 --force
 
           echo ✅ Verify Cypress
           npx cypress verify
@@ -71,7 +94,7 @@ jobs:
         uses: cypress-io/github-action@v6
         with:
           install: false
-          command: yarn cypress-cloud run --record --parallel --key ${{ secrets.V2_CYPRESS_RECORD_KEY }} --group UI --ci-build-id ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt}} --env TAGS="not @ignoreDuringUI",STATIC_BALANCE_ACCOUNT_PRIVATE_KEY=${{ secrets.STATIC_BALANCE_ACCOUNT_PRIVATE_KEY }},ONGOING_STREAM_ACCOUNT_PRIVATE_KEY=${{ secrets.ONGOING_STREAM_ACCOUNT_PRIVATE_KEY }},TX_ACCOUNT_PRIVATE_KEY1=${{ secrets.TX_ACCOUNT_PRIVATE_KEY1 }},TX_ACCOUNT_PRIVATE_KEY2=${{ secrets.TX_ACCOUNT_PRIVATE_KEY2 }},TX_ACCOUNT_PRIVATE_KEY3=${{ secrets.TX_ACCOUNT_PRIVATE_KEY3 }},TX_ACCOUNT_PRIVATE_KEY4=${{ secrets.TX_ACCOUNT_PRIVATE_KEY4 }}
+          command: pnpm cypress-cloud run --record --parallel --key ${{ secrets.V2_CYPRESS_RECORD_KEY }} --group UI --ci-build-id ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt}} --env TAGS="not @ignoreDuringUI",STATIC_BALANCE_ACCOUNT_PRIVATE_KEY=${{ secrets.STATIC_BALANCE_ACCOUNT_PRIVATE_KEY }},ONGOING_STREAM_ACCOUNT_PRIVATE_KEY=${{ secrets.ONGOING_STREAM_ACCOUNT_PRIVATE_KEY }},TX_ACCOUNT_PRIVATE_KEY1=${{ secrets.TX_ACCOUNT_PRIVATE_KEY1 }},TX_ACCOUNT_PRIVATE_KEY2=${{ secrets.TX_ACCOUNT_PRIVATE_KEY2 }},TX_ACCOUNT_PRIVATE_KEY3=${{ secrets.TX_ACCOUNT_PRIVATE_KEY3 }},TX_ACCOUNT_PRIVATE_KEY4=${{ secrets.TX_ACCOUNT_PRIVATE_KEY4 }}
           working-directory: tests
         env:
           CYPRESS_baseUrl: ${{ needs.test_setup.outputs.netlify_url }}
@@ -84,7 +107,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        container: [1, 2]
+        container: [1,2]
         network:
           [
             "gnosis",
@@ -101,27 +124,29 @@ jobs:
             "base",
           ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
         with:
-          node-version: 18.x
-          cache: "yarn"
+          node-version: 20.x
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
 
       #A workaround for Cypress to work with Currents https://github.com/currents-dev/gh-actions-example/blob/main/.github/workflows/currents.yml
       # Install Currents
       - name: Install dependencies
         run: |
-          yarn install
+          pnpm i
 
       - name: Unblock Cypress
         working-directory: "tests"
         run: |
           echo 🕊️ Download Free Cypress
-          CYPRESS_DOWNLOAD_MIRROR=https://cy-cdn.currents.dev yarn add cypress@12.17.4 --force
+          CYPRESS_DOWNLOAD_MIRROR=https://cy-cdn.currents.dev pnpm add cypress@12.17.4 --force
 
           echo ✅ Verify Cypress
           npx cypress verify
@@ -134,7 +159,7 @@ jobs:
         uses: cypress-io/github-action@v6
         with:
           install: false
-          command: yarn cypress-cloud run --record --parallel --key ${{ secrets.V2_CYPRESS_RECORD_KEY }} --group rejected-${{ matrix.network }} --ci-build-id ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt}} --env network=${{ matrix.network }},TAGS=@rejected,STATIC_BALANCE_ACCOUNT_PRIVATE_KEY=${{ secrets.STATIC_BALANCE_ACCOUNT_PRIVATE_KEY }},ONGOING_STREAM_ACCOUNT_PRIVATE_KEY=${{ secrets.ONGOING_STREAM_ACCOUNT_PRIVATE_KEY }},TX_ACCOUNT_PRIVATE_KEY1=${{ secrets.TX_ACCOUNT_PRIVATE_KEY1 }},TX_ACCOUNT_PRIVATE_KEY2=${{ secrets.TX_ACCOUNT_PRIVATE_KEY2 }},TX_ACCOUNT_PRIVATE_KEY3=${{ secrets.TX_ACCOUNT_PRIVATE_KEY3 }},TX_ACCOUNT_PRIVATE_KEY4=${{ secrets.TX_ACCOUNT_PRIVATE_KEY4 }}
+          command: pnpm cypress-cloud run --record --parallel --key ${{ secrets.V2_CYPRESS_RECORD_KEY }} --group rejected-${{ matrix.network }} --ci-build-id ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt}} --env network=${{ matrix.network }},TAGS=@rejected,STATIC_BALANCE_ACCOUNT_PRIVATE_KEY=${{ secrets.STATIC_BALANCE_ACCOUNT_PRIVATE_KEY }},ONGOING_STREAM_ACCOUNT_PRIVATE_KEY=${{ secrets.ONGOING_STREAM_ACCOUNT_PRIVATE_KEY }},TX_ACCOUNT_PRIVATE_KEY1=${{ secrets.TX_ACCOUNT_PRIVATE_KEY1 }},TX_ACCOUNT_PRIVATE_KEY2=${{ secrets.TX_ACCOUNT_PRIVATE_KEY2 }},TX_ACCOUNT_PRIVATE_KEY3=${{ secrets.TX_ACCOUNT_PRIVATE_KEY3 }},TX_ACCOUNT_PRIVATE_KEY4=${{ secrets.TX_ACCOUNT_PRIVATE_KEY4 }}
           working-directory: tests
         env:
           CYPRESS_baseUrl: ${{ needs.test_setup.outputs.netlify_url }}
@@ -148,29 +173,30 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         #In order to change the default behaviour and checkout the triggering commit ,
         #e.g. don't show Merge 23452345234523452345 into 34563456345634563456 but the actual commit that triggered the workflow in the test results
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
         with:
-          node-version: 18.x
-          cache: "yarn"
+          node-version: 20.x
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
       #A workaround for Cypress to work with Currents https://github.com/currents-dev/gh-actions-example/blob/main/.github/workflows/currents.yml
       # Install Currents
       - name: Install dependencies
         run: |
-          yarn install
+          pnpm i
 
       - name: Unblock Cypress
         working-directory: "tests"
         run: |
           echo 🕊️ Download Free Cypress
-          CYPRESS_DOWNLOAD_MIRROR=https://cy-cdn.currents.dev yarn add cypress@12.17.4 --force
+          CYPRESS_DOWNLOAD_MIRROR=https://cy-cdn.currents.dev pnpm add cypress@12.17.4 --force
 
           echo ✅ Verify Cypress
           npx cypress verify
@@ -184,6 +210,6 @@ jobs:
         with:
           install: false
           working-directory: tests
-          command: yarn cypress-cloud run --browser chrome --config chromeWebSecurity=false --record --parallel --key ${{ secrets.V2_CYPRESS_RECORD_KEY }} --group Gnosis --ci-build-id ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt}} --env TAGS=@Gnosis
+          command: pnpm cypress-cloud run --browser chrome --config chromeWebSecurity=false --record --parallel --key ${{ secrets.V2_CYPRESS_RECORD_KEY }} --group Gnosis --ci-build-id ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt}} --env TAGS=@Gnosis
         env:
           CYPRESS_baseUrl: ${{ needs.test_setup.outputs.netlify_url }}
