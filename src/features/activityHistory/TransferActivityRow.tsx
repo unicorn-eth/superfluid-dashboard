@@ -21,13 +21,13 @@ import { Activity } from "../../utils/activityUtils";
 import AddressCopyTooltip from "../common/AddressCopyTooltip";
 import TxHashLink from "../common/TxHashLink";
 import NetworkBadge from "../network/NetworkBadge";
-import { subgraphApi } from "../redux/store";
 import Amount from "../token/Amount";
 import TokenIcon from "../token/TokenIcon";
 import FiatAmount from "../tokenPrice/FiatAmount";
 import useTokenPrice from "../tokenPrice/useTokenPrice";
 import { useVisibleAddress } from "../wallet/VisibleAddressContext";
 import ActivityIcon from "./ActivityIcon";
+import { useTokenQuery } from "../../hooks/useTokenQuery";
 
 interface TransferActivityRowProps extends Activity<TransferEvent> {
   dateFormat?: string;
@@ -46,11 +46,12 @@ const TransferActivityRow: FC<TransferActivityRowProps> = ({
 
   const tokenPrice = useTokenPrice(network.id, token);
 
-  const tokenQuery = subgraphApi.useTokenQuery(
+  const tokenQuery = useTokenQuery(
     token
       ? {
           chainId: network.id,
           id: token,
+          onlySuperToken: true,
         }
       : skipToken
   );
@@ -87,7 +88,8 @@ const TransferActivityRow: FC<TransferActivityRowProps> = ({
               <ListItemAvatar>
                 <TokenIcon
                   isSuper
-                  tokenSymbol={tokenQuery.data?.symbol}
+                  chainId={network.id}
+                  tokenAddress={token}
                   isUnlisted={!tokenQuery.data?.isListed}
                   isLoading={tokenQuery.isLoading}
                 />
@@ -168,7 +170,8 @@ const TransferActivityRow: FC<TransferActivityRowProps> = ({
             )}
             <TokenIcon
               isSuper
-              tokenSymbol={tokenQuery.data?.symbol}
+              chainId={network.id}
+              tokenAddress={token}
               isUnlisted={!tokenQuery.data?.isListed}
               isLoading={tokenQuery.isLoading}
             />

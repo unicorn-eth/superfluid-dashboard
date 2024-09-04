@@ -7,7 +7,6 @@ import {
   Alert,
   AlertTitle,
   Box,
-  Button,
   Container,
   Divider,
   IconButton,
@@ -47,7 +46,6 @@ import { ScheduledStreamIcon } from "../../../features/streamsTable/StreamIcons"
 import Amount from "../../../features/token/Amount";
 import FlowingBalance from "../../../features/token/FlowingBalance";
 import TokenIcon from "../../../features/token/TokenIcon";
-import { useTokenIsListed } from "../../../features/token/useTokenIsListed";
 import FlowingFiatBalance from "../../../features/tokenPrice/FlowingFiatBalance";
 import useTokenPrice from "../../../features/tokenPrice/useTokenPrice";
 import { useScheduledStream } from "../../../hooks/streamSchedulingHooks";
@@ -66,6 +64,7 @@ import Link from "../../../features/common/Link";
 import { HumaFinanceLink } from "../../../features/streamsTable/StreamRow";
 import { getVestingPagePath } from "../../../utils/URLUtils";
 import LockClockRoundedIcon from "@mui/icons-material/LockClockRounded";
+import { useTokenQuery } from "../../../hooks/useTokenQuery";
 
 const TEXT_TO_SHARE = (up?: boolean) =>
   encodeURIComponent(`I’m streaming money every second with @Superfluid_HQ! 🌊
@@ -325,10 +324,11 @@ const StreamPageContent: FC<{
 
   const tokenPrice = useTokenPrice(network.id, tokenAddress);
 
-  const [isTokenListed, isTokenListedLoading] = useTokenIsListed(
-    network.id,
-    tokenAddress
-  );
+  const { data: token, isLoading: isTokenLoading } = useTokenQuery({
+    chainId: network.id,
+    id: tokenAddress,
+    onlySuperToken: true
+  })
 
   const { data: isHumaFinanceOperatedStream } =
     subgraphApi.useIsHumaFinanceOperatorStreamQuery(
@@ -357,6 +357,12 @@ const StreamPageContent: FC<{
       refetchOnFocus: true, // Re-fetch list view more often where there might be something incoming.
     }
   );
+
+  const superTokenQuery = useTokenQuery({
+    chainId: network.id,
+    id: tokenAddress,
+    onlySuperToken: true,
+  });
 
   const { streamCreationEvent } = subgraphApi.useFlowUpdatedEventsQuery(
     {
@@ -458,7 +464,6 @@ const StreamPageContent: FC<{
   const {
     streamedUntilUpdatedAt,
     currentFlowRate,
-    tokenSymbol,
     receiver,
     sender,
     createdAtTimestamp,
@@ -471,6 +476,7 @@ const StreamPageContent: FC<{
 
   const isActive = currentFlowRate !== "0";
   const isOutgoing = visibleAddress?.toLowerCase() === sender.toLowerCase();
+  const tokenSymbol = superTokenQuery.data?.symbol;
 
   // TODO: This container max width should be configured in theme. Something between small and medium
   return (
@@ -554,9 +560,10 @@ const StreamPageContent: FC<{
               {!isBelowMd && (
                 <TokenIcon
                   isSuper
-                  tokenSymbol={tokenSymbol}
-                  isUnlisted={!isTokenListed}
-                  isLoading={isTokenListedLoading}
+                  chainId={network.id}
+                  tokenAddress={tokenAddress}
+                  isUnlisted={!token?.isListed}
+                  isLoading={isTokenLoading}
                   size={isBelowMd ? 32 : 60}
                 />
               )}
@@ -602,9 +609,10 @@ const StreamPageContent: FC<{
               >
                 <TokenIcon
                   isSuper
-                  tokenSymbol={tokenSymbol}
-                  isUnlisted={!isTokenListed}
-                  isLoading={isTokenListedLoading}
+                  chainId={network.id}
+                  tokenAddress={tokenAddress}
+                  isUnlisted={!token?.isListed}
+                  isLoading={isTokenLoading}
                   size={isBelowMd ? 32 : 60}
                 />
                 <Typography

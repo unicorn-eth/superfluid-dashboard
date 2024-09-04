@@ -3,20 +3,12 @@ import { useNetworkCustomTokens } from "../features/customTokens/customTokens.sl
 import { Network } from "../features/network/networks";
 import { subgraphApi } from "../features/redux/store";
 import { useMemo } from "react";
-import { getSuperTokenType } from "../features/redux/endpoints/adHocSubgraphEndpoints";
-import { SuperTokenType } from "../features/redux/endpoints/tokenTypes";
+import { getSuperTokensFromTokenList, mapSubgraphTokenToTokenMinimal } from "./useTokenQuery";
 
 export const useSuperTokens = ({ network, onlyWrappable }: { network: Network, onlyWrappable?: boolean }) => {
     const networkCustomTokens = useNetworkCustomTokens(network.id);
 
-    const listedSuperTokensQuery = subgraphApi.useTokensQuery({
-        chainId: network.id,
-        filter: {
-            isSuperToken: true,
-            isListed: true,
-            ...(onlyWrappable ? { underlyingAddress_not: "0x0000000000000000000000000000000000000000" } : {})
-        },
-    });
+    const listedSuperTokens = getSuperTokensFromTokenList(network.id, onlyWrappable);
 
     const customSuperTokensQuery = subgraphApi.useTokensQuery(
         networkCustomTokens.length > 0
@@ -33,21 +25,18 @@ export const useSuperTokens = ({ network, onlyWrappable }: { network: Network, o
     );
 
     const superTokens = useMemo(
-        () =>
-            (listedSuperTokensQuery.data?.items || [])
-                .concat(customSuperTokensQuery.data?.items || [])
-                .map((x) => ({
-                    ...x,
-                    address: x.id,
-                    type: getSuperTokenType({ ...x, network, address: x.id }) as SuperTokenType,
-                    decimals: 18,
-                })),
-        [network, listedSuperTokensQuery.data, customSuperTokensQuery.data]
+        () => {
+            const customSuperTokens = (customSuperTokensQuery.data?.items || []).map(token => mapSubgraphTokenToTokenMinimal(network.id, token as typeof token & { isSuperToken: true}));
+            return listedSuperTokens.concat(customSuperTokens);
+        },
+        [network, listedSuperTokens, customSuperTokensQuery.data]
     );
 
     return {
-        listedSuperTokensQuery,
+        listedSuperTokens,
         customSuperTokensQuery,
-        superTokens
+        superTokens,
+        isLoading: customSuperTokensQuery.isLoading,
+        isFetching: customSuperTokensQuery.isFetching,
     };
 }

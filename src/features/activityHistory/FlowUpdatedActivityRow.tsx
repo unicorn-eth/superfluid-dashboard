@@ -36,6 +36,7 @@ import FlowingFiatBalance from "../tokenPrice/FlowingFiatBalance";
 import useTokenPrice from "../tokenPrice/useTokenPrice";
 import { useVisibleAddress } from "../wallet/VisibleAddressContext";
 import ActivityIcon from "./ActivityIcon";
+import { useTokenQuery } from "../../hooks/useTokenQuery";
 
 interface FlowUpdatedActivityRowProps extends Activity<FlowUpdatedEvent> {
   dateFormat?: string;
@@ -56,7 +57,7 @@ const FlowUpdatedActivityRow: FC<FlowUpdatedActivityRowProps> = ({
     receiver,
     sender,
     timestamp,
-    token,
+    token: tokenAddress,
     transactionHash,
     id,
   } = keyEvent;
@@ -78,9 +79,10 @@ const FlowUpdatedActivityRow: FC<FlowUpdatedActivityRowProps> = ({
     }
   );
 
-  const tokenQuery = subgraphApi.useTokenQuery({
+  const tokenQuery = useTokenQuery({
     chainId: network.id,
-    id: token,
+    id: tokenAddress,
+    onlySuperToken: true,
   });
 
   const isOutgoing = useMemo(
@@ -88,7 +90,7 @@ const FlowUpdatedActivityRow: FC<FlowUpdatedActivityRowProps> = ({
     [visibleAddress, sender]
   );
 
-  const tokenPrice = useTokenPrice(network.id, token);
+  const tokenPrice = useTokenPrice(network.id, tokenAddress);
 
   const { title, icon } = useMemo(() => {
     switch (type) {
@@ -145,7 +147,8 @@ const FlowUpdatedActivityRow: FC<FlowUpdatedActivityRowProps> = ({
               <ListItemAvatar>
                 <TokenIcon
                   isSuper
-                  tokenSymbol={tokenQuery.data?.symbol}
+                  chainId={network.id}
+                  tokenAddress={tokenAddress}
                   isUnlisted={!tokenQuery.data?.isListed}
                   isLoading={tokenQuery.isLoading}
                 />
@@ -275,7 +278,8 @@ const FlowUpdatedActivityRow: FC<FlowUpdatedActivityRowProps> = ({
             />
             <TokenIcon
               isSuper
-              tokenSymbol={tokenQuery.data?.symbol}
+              chainId={network.id}
+              tokenAddress={tokenAddress}
               isUnlisted={!tokenQuery.data?.isListed}
               isLoading={tokenQuery.isLoading}
             />

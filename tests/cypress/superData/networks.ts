@@ -9,7 +9,11 @@ import {
 } from './tokenTypes';
 import { BigNumber, BigNumberish } from 'ethers';
 import { BasePage, UnitOfTime } from '../pageObjects/BasePage';
-import ensureDefined from '../../../src/utils/ensureDefined';
+
+function ensureDefined<T>(value: T | undefined | null): T {
+  if (!value) throw Error('Value has to be defined.');
+  return value;
+}
 
 export const autoWrapManagerAddresses = {
   [chain.polygon.id]: '0x2581c27E7f6D6AF452E63fCe884EDE3EDd716b32',
@@ -126,7 +130,7 @@ export const networkDefinition: {
   degenChain: Network;
 } = {
   gnosis: {
-    name: 'Gnosis Chain',
+    name: 'Gnosis',
     slugName: 'gnosis',
     v1ShortName: 'xdai',
     network: 'xdai',
@@ -196,7 +200,7 @@ export const networkDefinition: {
     },
   },
   avalancheFuji: {
-    name: 'Fuji (C-Chain)',
+    name: 'Avalanche Fuji',
     slugName: 'avalanche-fuji',
     v1ShortName: 'avalanche-fuji',
     network: 'avalanche-fuji',
@@ -299,7 +303,7 @@ export const networkDefinition: {
     },
   },
   avalancheC: {
-    name: 'Avalanche C',
+    name: 'Avalanche',
     slugName: 'avalanche',
     v1ShortName: 'avalanche-c',
     network: 'avalanche-c',

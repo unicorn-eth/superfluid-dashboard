@@ -10,7 +10,6 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { Token } from "@superfluid-finance/sdk-core";
 import NextLink from "next/link";
 import { FC, useMemo } from "react";
 import { useAccount } from "wagmi";
@@ -20,24 +19,28 @@ import { useHasFlag } from "../flags/flagsHooks";
 import NetworkIcon from "../network/NetworkIcon";
 import { Network } from "../network/networks";
 import { getSuperTokenType } from "../redux/endpoints/adHocSubgraphEndpoints";
-import { isWrappable } from "../redux/endpoints/tokenTypes";
+import { isWrappable, SuperTokenMinimal } from "../redux/endpoints/tokenTypes";
 import ConnectionBoundary from "../transactionBoundary/ConnectionBoundary";
 import AddToWalletButton from "../wallet/AddToWalletButton";
 import TokenIcon from "./TokenIcon";
 
 interface TokenToolbarData {
+  chainId: number;
+  tokenAddress: string;
   symbol: string;
   name: string;
   isUnlisted: boolean;
 }
 
 const TokenToolbarData: FC<TokenToolbarData> = ({
+  chainId,
+  tokenAddress,
   symbol,
   name,
   isUnlisted,
 }) => (
   <Stack data-cy={"token-header"} direction="row" alignItems="center" gap={2}>
-    <TokenIcon isSuper tokenSymbol={symbol} isUnlisted={isUnlisted} />
+    <TokenIcon chainId={chainId} tokenAddress={tokenAddress} isUnlisted={isUnlisted} />
     <Typography data-cy={"token-name"} variant="h3" component="h1">
       {name}
     </Typography>
@@ -48,7 +51,7 @@ const TokenToolbarData: FC<TokenToolbarData> = ({
 );
 
 interface TokenToolbarProps {
-  token: Token;
+  token: SuperTokenMinimal;
   network: Network;
   onBack?: () => void;
 }
@@ -57,7 +60,7 @@ const TokenToolbar: FC<TokenToolbarProps> = ({ token, network, onBack }) => {
   const theme = useTheme();
   const isBelowMd = useMediaQuery(theme.breakpoints.down("md"));
   const {
-    id: tokenAddress,
+    address: tokenAddress,
     underlyingAddress,
     symbol,
     decimals,
@@ -99,6 +102,8 @@ const TokenToolbar: FC<TokenToolbarProps> = ({ token, network, onBack }) => {
         {!isBelowMd && (
           <>
             <TokenToolbarData
+              chainId={network.id}
+              tokenAddress={tokenAddress}
               symbol={symbol}
               name={name}
               isUnlisted={!isListed}
@@ -135,7 +140,7 @@ const TokenToolbar: FC<TokenToolbarProps> = ({ token, network, onBack }) => {
           {wrappable && (
             <>
               <NextLink
-                href={`/wrap?upgrade&token=${token.id}&network=${network.slugName}`}
+                href={`/wrap?upgrade&token=${token.address}&network=${network.slugName}`}
                 passHref
                 legacyBehavior
               >
@@ -146,7 +151,7 @@ const TokenToolbar: FC<TokenToolbarProps> = ({ token, network, onBack }) => {
                 </Tooltip>
               </NextLink>
               <NextLink
-                href={`/wrap?downgrade&token=${token.id}&network=${network.slugName}`}
+                href={`/wrap?downgrade&token=${token.address}&network=${network.slugName}`}
                 passHref
               >
                 <Tooltip title="Unwrap">
@@ -161,7 +166,13 @@ const TokenToolbar: FC<TokenToolbarProps> = ({ token, network, onBack }) => {
       </Stack>
 
       {isBelowMd && (
-        <TokenToolbarData symbol={symbol} name={name} isUnlisted={!isListed} />
+        <TokenToolbarData
+          chainId={network.id}
+          tokenAddress={tokenAddress}
+          symbol={symbol}
+          name={name}
+          isUnlisted={!isListed}
+        />
       )}
     </Stack>
   );

@@ -28,7 +28,6 @@ import FiatAmount from "../../../features/tokenPrice/FiatAmount";
 import FlowingFiatBalance from "../../../features/tokenPrice/FlowingFiatBalance";
 import useTokenPrice from "../../../features/tokenPrice/useTokenPrice";
 import { BigLoader } from "../../../features/vesting/BigLoader";
-import { useVestingToken } from "../../../features/vesting/useVestingToken";
 import VestedBalance from "../../../features/vesting/VestedBalance";
 import VestingDataCard from "../../../features/vesting/VestingDataCard";
 import VestingDetailsHeader from "../../../features/vesting/VestingDetailsHeader";
@@ -43,6 +42,7 @@ import { calculateVestingScheduleAllocated } from "../../../utils/vestingUtils";
 import { vestingSubgraphApi } from "../../../vesting-subgraph/vestingSubgraphApi";
 import Page404 from "../../404";
 import { NextPageWithLayout } from "../../_app";
+import { useTokenQuery } from "../../../hooks/useTokenQuery";
 
 interface VestingLegendItemProps {
   title: string;
@@ -234,7 +234,11 @@ const VestingScheduleDetailsContent: FC<VestingScheduleDetailsContentProps> = ({
     }
   );
 
-  const tokenQuery = useVestingToken(network, vestingSchedule?.superToken);
+  const tokenQuery = useTokenQuery(vestingSchedule ? {
+    chainId: network.id,
+    id: vestingSchedule?.superToken,
+    onlySuperToken: true
+  } : skipToken);
   const tokenPrice = useTokenPrice(network.id, vestingSchedule?.superToken);
 
   const token = tokenQuery.data;
@@ -366,6 +370,8 @@ const VestingScheduleDetailsContent: FC<VestingScheduleDetailsContentProps> = ({
         >
           <VestingDataCard
             title="Tokens Allocated"
+            chainId={network.id}
+            tokenAddress={token.address}
             dataCy={`${token.symbol}-allocated`}
             tokenSymbol={token.symbol}
             tokenAmount={<Amount wei={expectedVestedBalance || "0"} />}
@@ -380,6 +386,8 @@ const VestingScheduleDetailsContent: FC<VestingScheduleDetailsContentProps> = ({
           />
           <VestingDataCard
             title="Cliff Amount"
+            chainId={network.id}
+            tokenAddress={token.address}
             dataCy={`${token.symbol}-cliff-amount`}
             tokenSymbol={token.symbol}
             tokenAmount={<Amount wei={vestingSchedule.cliffAmount} />}

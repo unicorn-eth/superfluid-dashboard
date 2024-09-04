@@ -51,7 +51,7 @@ export const TokenListItem: FC<TokenListItemProps> = ({
   const isUnderlyingToken = isUnderlying(token);
   const isWrappableSuperToken = isSuperToken && isWrappable(token);
 
-  const isListed = isUnderlying(token) || !!token.isListed;
+  const isListed = isUnderlying(token) || (isSuper(token) && token.isListed);
 
   const { data: _discard, ...underlyingBalanceQuery } =
     rpcApi.useUnderlyingBalanceQuery(
@@ -94,7 +94,8 @@ export const TokenListItem: FC<TokenListItemProps> = ({
       <ListItemAvatar>
         <TokenIcon
           isSuper={isSuperToken}
-          tokenSymbol={token.symbol}
+          chainId={chainId}
+          tokenAddress={token.address}
           isUnlisted={!isListed}
         />
       </ListItemAvatar>

@@ -24,6 +24,7 @@ import { subgraphApi } from "../redux/store";
 import TokenIcon from "../token/TokenIcon";
 import { useVisibleAddress } from "../wallet/VisibleAddressContext";
 import ActivityIcon from "./ActivityIcon";
+import { useTokenQuery } from "../../hooks/useTokenQuery";
 
 interface IndexUnitsUpdatedActivityRowProps extends IndexUnitsUpdatedActivity {
   dateFormat?: string;
@@ -52,9 +53,10 @@ const IndexUnitsUpdatedActivityRow: FC<IndexUnitsUpdatedActivityRowProps> = ({
     blockNumber,
   } = keyEvent;
 
-  const tokenQuery = subgraphApi.useTokenQuery({
+  const tokenQuery = useTokenQuery({
     chainId: network.id,
     id: token,
+    onlySuperToken: true,
   });
 
   const indexQuery = subgraphApi.useIndexQuery({
@@ -117,7 +119,8 @@ const IndexUnitsUpdatedActivityRow: FC<IndexUnitsUpdatedActivityRowProps> = ({
               <ListItemAvatar>
                 <TokenIcon
                   isSuper
-                  tokenSymbol={tokenQuery.data?.symbol}
+                  chainId={network.id}
+                  tokenAddress={token}
                   isUnlisted={!tokenQuery.data?.isListed}
                   isLoading={tokenQuery.isLoading}
                 />
@@ -193,7 +196,8 @@ const IndexUnitsUpdatedActivityRow: FC<IndexUnitsUpdatedActivityRowProps> = ({
             />
             <TokenIcon
               isSuper
-              tokenSymbol={tokenQuery.data?.symbol}
+              chainId={network.id}
+              tokenAddress={token}
               isUnlisted={!tokenQuery.data?.isListed}
               isLoading={tokenQuery.isLoading}
             />

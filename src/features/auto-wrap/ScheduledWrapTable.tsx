@@ -25,6 +25,7 @@ import { AutoWrapContractInfo } from "../vesting/VestingScheduleTables";
 import { PlatformWhitelistedStatus } from "./ScheduledWrapTables";
 import { platformApi } from "../redux/platformApi/platformApi";
 import ScheduledWrapLoadingTable from "./ScheduledWrapLoadingTable";
+import { EMPTY_ARRAY } from "../../utils/constants";
 
 interface TokenSnapshotTableProps {
   address: Address;
@@ -62,19 +63,14 @@ const ScheduledWrapTable: FC<TokenSnapshotTableProps> = ({
         selectFromResult: (result) => ({
           ...result,
           wrapSchedules:
-            result.data?.wrapSchedules ?? [],
+            result.data?.wrapSchedules ?? EMPTY_ARRAY,
         }),
       }
     );
 
-    console.log({
-      wrapSchedules,
-      network: network.name,
-    })
-
   const paginatedWrapSchedules = useMemo(
     () => wrapSchedules.slice(page * rowsPerPage, (page + 1) * rowsPerPage),
-    [page, rowsPerPage, wrapSchedules]
+    [page, rowsPerPage, wrapSchedules.length]
   );
 
   const { isPlatformWhitelisted_, isLoading: isWhitelistLoading } =
@@ -95,19 +91,20 @@ const ScheduledWrapTable: FC<TokenSnapshotTableProps> = ({
     );
   const isPlatformWhitelisted = Boolean(isPlatformWhitelisted_ || network?.testnet);
 
+  const hasContent = !!wrapSchedules.length;
   useEffect(() => {
     fetchingCallback(network.id, {
-      isLoading: isLoading,
-      hasContent: !!wrapSchedules.length,
+      isLoading,
+      hasContent,
     });
-  }, [network.id, isLoading, wrapSchedules.length, fetchingCallback]);
+  }, [network.id, isLoading, hasContent, fetchingCallback]);
 
   useEffect(() => {
     whitelistedCallback(network.id, {
       isLoading: isWhitelistLoading,
       isWhitelisted: isPlatformWhitelisted,
     });
-  }, [isWhitelistLoading, isPlatformWhitelisted, whitelistedCallback]);
+  }, [isWhitelistLoading, isPlatformWhitelisted, whitelistedCallback, network.id]);
 
   const handleChangePage = (_e: unknown, newPage: number) => {
     setPage(newPage);

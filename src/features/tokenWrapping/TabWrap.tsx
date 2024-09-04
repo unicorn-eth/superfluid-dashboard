@@ -9,16 +9,14 @@ import useGetTransactionOverrides from "../../hooks/useGetTransactionOverrides";
 import { inputPropsForEtherAmount } from "../../utils/inputPropsForEtherAmount";
 import { parseAmountOrZero } from "../../utils/tokenUtils";
 import { useAnalytics } from "../analytics/useAnalytics";
-import { useNetworkCustomTokens } from "../customTokens/customTokens.slice";
 import { useLayoutContext } from "../layout/LayoutContext";
 import { useExpectedNetwork } from "../network/ExpectedNetworkContext";
 import {
   NATIVE_ASSET_ADDRESS,
   SuperTokenPair,
 } from "../redux/endpoints/tokenTypes";
-import { rpcApi, subgraphApi } from "../redux/store";
+import { rpcApi } from "../redux/store";
 import TokenIcon from "../token/TokenIcon";
-import { useTokenIsListed } from "../token/useTokenIsListed";
 import FiatAmount from "../tokenPrice/FiatAmount";
 import useTokenPrice from "../tokenPrice/useTokenPrice";
 import ConnectionBoundary from "../transactionBoundary/ConnectionBoundary";
@@ -41,6 +39,8 @@ import { TokenDialogButton } from "./TokenDialogButton";
 import { useTokenPairQuery } from "./useTokenPairQuery";
 import { WrapInputCard } from "./WrapInputCard";
 import { ValidWrappingForm, WrappingForm } from "./WrappingFormProvider";
+import { useTokenQuery } from "../../hooks/useTokenQuery";
+import { useTokenPairsQuery } from "./useTokenPairsQuery";
 
 const underlyingIbAlluoTokenOverrides = [
   // StIbAlluoEth
@@ -75,7 +75,7 @@ export const TabWrap: FC<TabWrapProps> = ({ onSwitchMode }) => {
     resetField,
     formState,
     getValues,
-    setValue,
+    setValue
   } = useFormContext<WrappingForm>();
 
   // The reason to set the type and clear errors is that a single form context is used both for wrapping and unwrapping.
@@ -85,22 +85,18 @@ export const TabWrap: FC<TabWrapProps> = ({ onSwitchMode }) => {
       shouldTouch: false,
       shouldValidate: true,
     });
-  }, []);
+  }, [setValue]);
 
   const [tokenPair, amountDecimal] = watch([
     "data.tokenPair",
     "data.amountDecimal",
   ]);
 
-  const [amountWei, setAmountWei] = useState<BigNumber>( // The wei is based on the underlying token, so be careful with decimals.
-    ethers.BigNumber.from(0)
+  const [amountWei, setAmountWei] = useState<string>( // The wei is based on the underlying token, so be careful with decimals.
+    "0"
   );
 
-  const networkCustomTokens = useNetworkCustomTokens(network.id);
-  const tokenPairsQuery = subgraphApi.useTokenUpgradeDowngradePairsQuery({
-    chainId: network.id,
-    unlistedTokenIDs: networkCustomTokens,
-  });
+  const { data: tokenPairs, isFetching: tokenPairsIsFetching } = useTokenPairsQuery({ network });
 
   const { superToken, underlyingToken } = useTokenPairQuery({
     network,
@@ -115,10 +111,10 @@ export const TabWrap: FC<TabWrapProps> = ({ onSwitchMode }) => {
         parseAmountOrZero({
           value: amountDecimal,
           decimals: underlyingToken.decimals,
-        })
+        }).toString()
       );
     } else {
-      setAmountWei(BigNumber.from("0"));
+      setAmountWei("0");
     }
   }, [amountDecimal, underlyingToken]);
 
@@ -143,7 +139,7 @@ export const TabWrap: FC<TabWrapProps> = ({ onSwitchMode }) => {
   const missingAllowance = currentAllowance
     ? currentAllowance.gt(amountWei)
       ? ethers.BigNumber.from(0)
-      : amountWei.sub(currentAllowance)
+      : BigNumber.from(amountWei).sub(currentAllowance)
     : ethers.BigNumber.from(0);
 
   const [approveTrigger, approveResult] = rpcApi.useApproveMutation();
@@ -152,7 +148,7 @@ export const TabWrap: FC<TabWrapProps> = ({ onSwitchMode }) => {
   const isApproveAllowanceVisible = !!(
     underlyingToken &&
     tokenPair &&
-    !amountWei.isZero() &&
+    !BigNumber.from(amountWei).isZero() &&
     currentAllowance &&
     missingAllowance &&
     missingAllowance.gt(0)
@@ -174,8 +170,6 @@ export const TabWrap: FC<TabWrapProps> = ({ onSwitchMode }) => {
   }, [amountInputRef, tokenPair]);
 
   const tokenSelection = useMemo(() => {
-    const tokenPairs = tokenPairsQuery.data || [];
-
     /**
      * Filtering out duplicate pairs with the same underlying tokens due to UI limitations.
      * If pair with same underlying token already exists then...
@@ -198,7 +192,7 @@ export const TabWrap: FC<TabWrapProps> = ({ onSwitchMode }) => {
         return allowedTokenPairs.concat([tokenPair]);
       }, [] as SuperTokenPair[])
       .map((x) => x.underlyingToken);
-  }, [tokenPairsQuery.data]);
+  }, [tokenPairs.length]);
 
   const { underlyingBalance } = rpcApi.useUnderlyingBalanceQuery(
     tokenPair && visibleAddress
@@ -215,10 +209,16 @@ export const TabWrap: FC<TabWrapProps> = ({ onSwitchMode }) => {
     }
   );
 
-  const [isListed, isListedLoading] = useTokenIsListed(
-    network.id,
-    tokenPair?.superTokenAddress
+  const superTokenQuery = useTokenQuery(
+    tokenPair?.superTokenAddress ? {
+      chainId: network.id,
+      id: tokenPair.superTokenAddress,
+      onlySuperToken: true
+    } : skipToken
   );
+
+  const isListed = Boolean(superTokenQuery.data?.isListed);
+  const isListedLoading = superTokenQuery.isLoading
 
   return (
     <Stack data-cy={"wrap-screen"} direction="column" alignItems="center">
@@ -256,15 +256,11 @@ export const TabWrap: FC<TabWrapProps> = ({ onSwitchMode }) => {
               <TokenDialogButton
                 network={network}
                 token={underlyingToken}
-                tokenSelection={{
-                  tokenPairsQuery: {
-                    data: tokenSelection,
-                    isFetching: tokenPairsQuery.isFetching,
-                  },
-                }}
+                tokens={tokenSelection}
+                isTokensFetching={tokenPairsIsFetching}
                 onTokenSelect={(token) => {
                   resetField("data.amountDecimal");
-                  const tokenPair = tokenPairsQuery?.data?.find(
+                  const tokenPair = tokenPairs?.find(
                     (x) =>
                       x.underlyingToken.address.toLowerCase() ===
                       token.address.toLowerCase()
@@ -370,7 +366,8 @@ export const TabWrap: FC<TabWrapProps> = ({ onSwitchMode }) => {
               startIcon={
                 <TokenIcon
                   isSuper
-                  tokenSymbol={superToken.symbol}
+                  chainId={network.id}
+                  tokenAddress={superToken.address}
                   isUnlisted={!isListed}
                   isLoading={isListedLoading}
                   size={24}

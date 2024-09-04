@@ -81,13 +81,13 @@ import {
   ValidStreamingForm,
 } from "./StreamingFormProvider";
 import { useSuperTokens } from "../../../hooks/useSuperTokens";
-import { useSuperToken } from "../../../hooks/useSuperToken";
 import { SuperTokenMinimal, isWrappable } from "../../redux/endpoints/tokenTypes";
+import { useTokenQuery } from "../../../hooks/useTokenQuery";
 
 export const SendBalance: FC<{
   network: Network;
   visibleAddress: string | undefined;
-  token: (SuperTokenMinimal) | undefined
+  token: SuperTokenMinimal | undefined | null
 }> = ({ network, visibleAddress, token }) => {
   if (!visibleAddress || !token) {
     return null;
@@ -303,8 +303,8 @@ export default memo(function SendStream() {
     />
   );
 
-  const { token, isWrappableSuperToken } = useSuperToken({ network, tokenAddress });
-  const { listedSuperTokensQuery, customSuperTokensQuery, superTokens } = useSuperTokens({ network });
+  const { data: superToken } = useTokenQuery(tokenAddress ? { chainId: network.id, id: tokenAddress, onlySuperToken: true } : skipToken);
+  const { customSuperTokensQuery, superTokens, isFetching } = useSuperTokens({ network });
 
   const TokenController = (
     <Controller
@@ -312,17 +312,11 @@ export default memo(function SendStream() {
       name="data.tokenAddress"
       render={({ field: { onChange, onBlur } }) => (
         <TokenDialogButton
-          token={token}
+          token={superToken}
           network={network}
-          tokenSelection={{
-            showUpgrade: true,
-            tokenPairsQuery: {
-              data: superTokens,
-              isFetching:
-                listedSuperTokensQuery.isFetching ||
-                customSuperTokensQuery.isFetching,
-            },
-          }}
+          tokens={superTokens}
+          isTokensFetching={isFetching}
+          showUpgrade={true}
           onTokenSelect={(x) => onChange(x.address)}
           onBlur={onBlur}
           ButtonProps={{ variant: "input" }}
@@ -604,9 +598,9 @@ export default memo(function SendStream() {
         startAdornment: <>≈&nbsp;</>,
         endAdornment: (
           <Stack direction="row" gap={0.75} sx={{ ml: 0.5 }}>
-            <TokenIcon tokenSymbol={token?.symbol} isSuper size={24} />
+            <TokenIcon isSuper size={24} chainId={network.id} tokenAddress={superToken?.address} />
             <Typography variant="h6" component="span">
-              {token?.symbol ?? ""}
+              {superToken?.symbol ?? ""}
             </Typography>
           </Stack>
         ),
@@ -670,9 +664,9 @@ export default memo(function SendStream() {
       If you do not cancel this stream before your balance reaches zero,{" "}
       <b>
         you will lose your{" "}
-        {bufferAmount && token ? (
+        {bufferAmount && superToken ? (
           <span translate="no">
-            <Amount wei={bufferAmount.toString()}> {token.symbol}</Amount>
+            <Amount wei={bufferAmount.toString()}> {superToken.symbol}</Amount>
           </span>
         ) : null}{" "}
         buffer.
@@ -1071,14 +1065,14 @@ export default memo(function SendStream() {
         </>
       )}
 
-      <SendBalance network={network} visibleAddress={visibleAddress} token={token} />
+      <SendBalance network={network} visibleAddress={visibleAddress} token={superToken} />
 
-      {(token && visibleAddress) && <Divider />}
+      {(superToken && visibleAddress) && <Divider />}
 
-      {!!(receiverAddress && token) && (
+      {!!(receiverAddress && superToken) && (
         <StreamingPreview
           receiver={receiverAddress}
-          token={token}
+          token={superToken}
           existingFlowRate={existingScheduledFlowRate}
           flowRateEther={{
             ...flowRateEther,

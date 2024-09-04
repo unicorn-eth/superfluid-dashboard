@@ -22,6 +22,7 @@ import { VestingSchedule } from "./types";
 import Link from "next/link";
 import { ClaimVestingScheduleTransactionButton } from "./transactionButtons/ClaimVestingScheduleTransactionButton";
 import { useVisibleAddress } from "../wallet/VisibleAddressContext";
+import { SuperTokenMinimal } from "../redux/endpoints/tokenTypes";
 
 interface CounterpartyAddressProps {
   title: string;
@@ -73,7 +74,7 @@ const CounterpartyAddress: FC<CounterpartyAddressProps> = ({
 interface VestingDetailsHeaderProps {
   network: Network;
   vestingSchedule: VestingSchedule;
-  token: Token;
+  token: SuperTokenMinimal;
 }
 
 const VestingDetailsHeader: FC<VestingDetailsHeaderProps> = ({
@@ -115,7 +116,7 @@ const VestingDetailsHeader: FC<VestingDetailsHeaderProps> = ({
             </IconButton>
             <Stack direction="column">
               <Stack direction="row" alignItems="center" gap={2}>
-                <TokenIcon isSuper tokenSymbol={token.symbol} />
+                <TokenIcon isSuper chainId={network.id} tokenAddress={token.address} />
                 <Typography component="h1" variant="h4">
                   Vesting {token.symbol}
                 </Typography>

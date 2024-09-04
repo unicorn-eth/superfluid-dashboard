@@ -39,10 +39,11 @@ import { TokenDialogButton } from "../tokenWrapping/TokenDialogButton";
 import { transactionButtonDefaultProps } from "../transactionBoundary/TransactionButton";
 import { useVisibleAddress } from "../wallet/VisibleAddressContext";
 import { PartialVestingForm } from "./CreateVestingFormProvider";
-import { CreateVestingCardView, VestingToken } from "./CreateVestingSection";
+import { CreateVestingCardView } from "./CreateVestingSection";
 import useActiveAutoWrap from "./useActiveAutoWrap";
-import { TokenType } from "../redux/endpoints/tokenTypes";
+import { SuperTokenMinimal, TokenType } from "../redux/endpoints/tokenTypes";
 import { useVestingVersion } from "../../hooks/useVestingVersion";
+import { useSuperTokens } from "../../hooks/useSuperTokens";
 
 export enum VestingFormLabels {
   Receiver = "Receiver",
@@ -63,7 +64,7 @@ export enum VestingTooltips {
 }
 
 const CreateVestingForm: FC<{
-  token: VestingToken | undefined;
+  token: SuperTokenMinimal | null | undefined;
   setView: (value: CreateVestingCardView) => void;
 }> = ({ token, setView }) => {
   const theme = useTheme();
@@ -113,43 +114,7 @@ const CreateVestingForm: FC<{
     />
   );
 
-  const networkCustomTokens = useNetworkCustomTokens(network.id);
-
-  const listedSuperTokensQuery = subgraphApi.useTokensQuery({
-    chainId: network.id,
-    filter: {
-      isSuperToken: true,
-      isListed: true,
-    },
-  });
-
-  const customSuperTokensQuery = subgraphApi.useTokensQuery(
-    networkCustomTokens.length > 0
-      ? {
-        chainId: network.id,
-        filter: {
-          isSuperToken: true,
-          isListed: false,
-          id_in: networkCustomTokens,
-        },
-      }
-      : skipToken
-  );
-
-  const superTokens = useMemo(
-    () =>
-      (listedSuperTokensQuery.data?.items || [])
-        .concat(customSuperTokensQuery.data?.items || [])
-        .map((x) => ({
-          type: getSuperTokenType({ ...x, network, address: x.id }),
-          address: x.id,
-          name: x.name,
-          symbol: x.symbol,
-          decimals: 18,
-          isListed: x.isListed,
-        })),
-    [network, listedSuperTokensQuery.data, customSuperTokensQuery.data]
-  );
+  const { superTokens, isFetching } = useSuperTokens({ network });
 
   const TokenController = (
     <Controller
@@ -159,15 +124,9 @@ const CreateVestingForm: FC<{
         <TokenDialogButton
           token={token}
           network={network}
-          tokenSelection={{
-            showUpgrade: true,
-            tokenPairsQuery: {
-              data: superTokens,
-              isFetching:
-                listedSuperTokensQuery.isFetching ||
-                customSuperTokensQuery.isFetching,
-            },
-          }}
+          tokens={superTokens}
+          isTokensFetching={isFetching}
+          showUpgrade={true}
           onTokenSelect={(x) => onChange(x.address)}
           onBlur={onBlur}
           ButtonProps={{ variant: "input" }}
@@ -443,7 +402,7 @@ const CreateVestingForm: FC<{
     token &&
     getSuperTokenType({
       network,
-      address: token.id,
+      address: token.address,
       underlyingAddress: token.underlyingAddress,
     }) === TokenType.WrapperSuperToken;
 
@@ -457,7 +416,7 @@ const CreateVestingForm: FC<{
         chainId: network.id,
         accountAddress: visibleAddress,
         superTokenAddress: token.address,
-        underlyingTokenAddress: token.underlyingAddress,
+        underlyingTokenAddress: token.underlyingAddress!, // TODO: Do it without the bang?
       }
       : "skip"
   );

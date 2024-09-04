@@ -16,7 +16,7 @@ import {
 } from "../../utils/tokenUtils";
 import { testAddress, testEtherAmount } from "../../utils/yupUtils";
 import { useExpectedNetwork } from "../network/ExpectedNetworkContext";
-import { getNetworkDefaultTokenPair } from "../network/networks";
+import { getNetworkDefaultTokenPairs } from "../network/networks";
 import { NATIVE_ASSET_ADDRESS } from "../redux/endpoints/tokenTypes";
 import { rpcApi } from "../redux/store";
 import {
@@ -58,7 +58,7 @@ const WrappingFormProvider: FC<
       | undefined;
   }>
 > = ({ restoration, children }) => {
-  const { network, stopAutoSwitchToWalletNetwork } = useExpectedNetwork();
+  const { network } = useExpectedNetwork();
   const router = useRouter();
   const { token: tokenQueryParam } = router.query;
   const [queryRealtimeBalance] = rpcApi.useLazyRealtimeBalanceQuery();
@@ -235,7 +235,7 @@ The chain ID was: ${network.id}`);
     [network, visibleAddress, tokenPairsQuery.data]
   );
 
-  const networkDefaultTokenPair = getNetworkDefaultTokenPair(network);
+  const networkDefaultTokenPair = getNetworkDefaultTokenPairs(network)[0];
   const formMethods = useForm<WrappingForm, undefined, ValidWrappingForm>({
     defaultValues: {
       data: {

@@ -1,7 +1,7 @@
 import { Button, Input, Stack, Typography, useTheme } from "@mui/material";
 import { skipToken } from "@reduxjs/toolkit/dist/query";
 import { formatEther, parseEther } from "ethers/lib/utils";
-import { FC, useEffect, useRef } from "react";
+import { FC, useEffect, useMemo, useRef } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import useGetTransactionOverrides from "../../hooks/useGetTransactionOverrides";
 import { inputPropsForEtherAmount } from "../../utils/inputPropsForEtherAmount";
@@ -61,13 +61,15 @@ export const TabUnwrap: FC<TabUnwrapProps> = ({ onSwitchMode }) => {
       shouldTouch: false,
       shouldValidate: true,
     });
-  }, []);
+  }, [setValue]);
 
   const [tokenPair, amount] = watch(["data.tokenPair", "data.amountDecimal"]);
 
   const tokenPairsQuery = useTokenPairsQuery({
     network
   })
+
+  const superTokens = useMemo(() => tokenPairsQuery.data?.map((x) => x.superToken), [tokenPairsQuery.data?.length ?? 0])
 
   const { superToken, underlyingToken } = useTokenPairQuery({
     network,
@@ -142,12 +144,8 @@ export const TabUnwrap: FC<TabUnwrapProps> = ({ onSwitchMode }) => {
               <TokenDialogButton
                 network={network}
                 token={superToken}
-                tokenSelection={{
-                  tokenPairsQuery: {
-                    data: tokenPairsQuery.data?.map((x) => x.superToken),
-                    isFetching: tokenPairsQuery.isFetching,
-                  },
-                }}
+                tokens={superTokens}
+                isTokensFetching={tokenPairsQuery.isFetching}
                 onTokenSelect={(token) => {
                   resetField("data.amountDecimal");
                   const tokenPair = tokenPairsQuery?.data?.find(
@@ -259,7 +257,7 @@ export const TabUnwrap: FC<TabUnwrapProps> = ({ onSwitchMode }) => {
               variant={theme.palette.mode === "light" ? "outlined" : "token"}
               color="secondary"
               startIcon={
-                <TokenIcon tokenSymbol={underlyingToken.symbol} size={24} />
+                <TokenIcon chainId={network.id} tokenAddress={underlyingToken.address} size={24} />
               }
               sx={{ pointerEvents: "none" }}
               translate="no"

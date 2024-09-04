@@ -11,16 +11,16 @@ import {
 } from "@mui/material";
 import { skipToken } from "@reduxjs/toolkit/dist/query";
 import { format } from "date-fns";
-import { FC, memo, useMemo } from "react";
+import { FC, memo } from "react";
 import { BurnedActivity } from "../../utils/activityUtils";
 import TxHashLink from "../common/TxHashLink";
 import NetworkBadge from "../network/NetworkBadge";
-import { subgraphApi } from "../redux/store";
 import Amount from "../token/Amount";
 import TokenIcon from "../token/TokenIcon";
 import FiatAmount from "../tokenPrice/FiatAmount";
 import useTokenPrice from "../tokenPrice/useTokenPrice";
 import ActivityIcon from "./ActivityIcon";
+import { useTokenQuery } from "../../hooks/useTokenQuery";
 
 interface BurnActivityProps extends BurnedActivity {
   dateFormat?: string;
@@ -38,49 +38,25 @@ const BurnActivity: FC<BurnActivityProps> = ({
   const { amount, transactionHash, timestamp, token } = keyEvent;
   const { token: superTokenAddress } = transferEvent || {};
 
-  const isNativeAssetSuperToken =
-    network.nativeCurrency.superToken.address.toLowerCase() ===
-    superTokenAddress?.toLowerCase();
-
   const tokenPrice = useTokenPrice(network.id, token);
 
-  const superTokenQuery = subgraphApi.useTokenQuery(
-    !isNativeAssetSuperToken && superTokenAddress
+  const { data: superToken } = useTokenQuery(
+    superTokenAddress
       ? {
-          chainId: network.id,
           id: superTokenAddress,
+          chainId: network.id,
+          onlySuperToken: true
         }
       : skipToken
   );
 
-  const superToken = useMemo(
-    () =>
-      isNativeAssetSuperToken
-        ? network.nativeCurrency.superToken
-        : superTokenQuery.data,
-    [isNativeAssetSuperToken, superTokenQuery.data]
-  );
-
-  const underlyingTokenQuery = subgraphApi.useTokenQuery(
-    !isNativeAssetSuperToken && superTokenQuery.data
+  const { data: underlyingToken }  = useTokenQuery(
+    superToken?.underlyingAddress
       ? {
           chainId: network.id,
-          id: superTokenQuery.data.underlyingAddress,
+          id: superToken.underlyingAddress,
         }
       : skipToken
-  );
-
-  const underlyingToken = useMemo(
-    () =>
-      isNativeAssetSuperToken
-        ? network.nativeCurrency
-        : underlyingTokenQuery.data,
-    [isNativeAssetSuperToken, underlyingTokenQuery.data]
-  );
-
-  const isSuperTokenListed = useMemo(
-    () => isNativeAssetSuperToken || superTokenQuery.data?.isListed,
-    [isNativeAssetSuperToken, superTokenQuery.data]
   );
 
   return (
@@ -112,8 +88,9 @@ const BurnActivity: FC<BurnActivityProps> = ({
                 <ListItemAvatar>
                   <TokenIcon
                     isSuper
-                    tokenSymbol={superToken.symbol}
-                    isUnlisted={!isSuperTokenListed}
+                    chainId={network.id}
+                    tokenAddress={superToken.address}
+                    isUnlisted={!superToken.isListed}
                   />
                 </ListItemAvatar>
                 <ListItemText
@@ -141,7 +118,10 @@ const BurnActivity: FC<BurnActivityProps> = ({
             {underlyingToken && (
               <ListItem sx={{ p: 0 }}>
                 <ListItemAvatar>
-                  <TokenIcon tokenSymbol={underlyingToken.symbol} />
+                  <TokenIcon
+                    chainId={network.id}
+                    tokenAddress={underlyingToken.address}
+                  />
                 </ListItemAvatar>
                 <ListItemText
                   data-cy={"amountToFrom"}
@@ -191,7 +171,10 @@ const BurnActivity: FC<BurnActivityProps> = ({
                 primaryTypographyProps={{ variant: "h7mono" }}
                 secondaryTypographyProps={{ variant: "body2mono" }}
               />
-              <TokenIcon tokenSymbol={underlyingToken.symbol} />
+              <TokenIcon
+                chainId={network.id}
+                tokenAddress={underlyingToken.address}
+              />
             </Stack>
           )}
         </TableCell>

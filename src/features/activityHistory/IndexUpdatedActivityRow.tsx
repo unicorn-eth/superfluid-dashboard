@@ -21,6 +21,7 @@ import Amount from "../token/Amount";
 import TokenIcon from "../token/TokenIcon";
 import { useVisibleAddress } from "../wallet/VisibleAddressContext";
 import ActivityIcon from "./ActivityIcon";
+import { useTokenQuery } from "../../hooks/useTokenQuery";
 
 interface IndexUpdatedActivityRowProps extends Activity<IndexUpdatedEvent> {
   dateFormat?: string;
@@ -46,9 +47,10 @@ const IndexUpdatedActivityRow: FC<IndexUpdatedActivityRowProps> = ({
     transactionHash,
   } = keyEvent;
 
-  const tokenQuery = subgraphApi.useTokenQuery({
+  const tokenQuery = useTokenQuery({
     chainId: network.id,
     id: token,
+    onlySuperToken: true,
   });
 
   const isPublisher = visibleAddress?.toLowerCase() === publisher.toLowerCase();
@@ -105,7 +107,8 @@ const IndexUpdatedActivityRow: FC<IndexUpdatedActivityRowProps> = ({
               <ListItemAvatar>
                 <TokenIcon
                   isSuper
-                  tokenSymbol={tokenQuery.data?.symbol}
+                  chainId={network.id}
+                  tokenAddress={token}
                   isUnlisted={!tokenQuery.data?.isListed}
                   isLoading={tokenQuery.isLoading}
                 />
@@ -193,7 +196,8 @@ const IndexUpdatedActivityRow: FC<IndexUpdatedActivityRowProps> = ({
             />
             <TokenIcon
               isSuper
-              tokenSymbol={tokenQuery.data?.symbol}
+              chainId={network.id}
+              tokenAddress={token}
               isUnlisted={!tokenQuery.data?.isListed}
               isLoading={tokenQuery.isLoading}
             />

@@ -20,10 +20,10 @@ import { AgreementLiquidatedActivity } from "../../utils/activityUtils";
 import AddressCopyTooltip from "../common/AddressCopyTooltip";
 import TxHashLink from "../common/TxHashLink";
 import NetworkBadge from "../network/NetworkBadge";
-import { subgraphApi } from "../redux/store";
 import TokenIcon from "../token/TokenIcon";
 import { useVisibleAddress } from "../wallet/VisibleAddressContext";
 import ActivityIcon from "./ActivityIcon";
+import { useTokenQuery } from "../../hooks/useTokenQuery";
 
 interface LiquidatedActivityRowProps extends AgreementLiquidatedActivity {
   dateFormat?: string;
@@ -42,11 +42,12 @@ const LiquidatedActivityRow: FC<LiquidatedActivityRowProps> = ({
   const isBelowMd = useMediaQuery(theme.breakpoints.down("md"));
   const { visibleAddress } = useVisibleAddress();
 
-  const tokenQuery = subgraphApi.useTokenQuery(
+  const tokenQuery = useTokenQuery(
     token
       ? {
           chainId: network.id,
           id: token,
+          onlySuperToken: true,
         }
       : skipToken
   );
@@ -83,7 +84,8 @@ const LiquidatedActivityRow: FC<LiquidatedActivityRowProps> = ({
               <ListItemAvatar>
                 <TokenIcon
                   isSuper
-                  tokenSymbol={tokenQuery.data?.symbol}
+                  chainId={network.id}
+                  tokenAddress={token}
                   isUnlisted={!tokenQuery.data?.isListed}
                   isLoading={tokenQuery.isLoading}
                 />
@@ -150,7 +152,8 @@ const LiquidatedActivityRow: FC<LiquidatedActivityRowProps> = ({
           <Stack direction="row" alignItems="center" justifyContent="end">
             <TokenIcon
               isSuper
-              tokenSymbol={tokenQuery.data?.symbol}
+              chainId={network.id}
+              tokenAddress={token}
               isUnlisted={!tokenQuery.data?.isListed}
               isLoading={tokenQuery.isLoading}
             />

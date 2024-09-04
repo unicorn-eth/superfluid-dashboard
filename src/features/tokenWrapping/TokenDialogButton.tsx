@@ -1,39 +1,39 @@
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { Button, ButtonProps, Paper } from "@mui/material";
+import { Button, ButtonProps } from "@mui/material";
 import { FC, useState } from "react";
-import { useExpectedNetwork } from "../network/ExpectedNetworkContext";
 import {
   isSuper,
   isUnderlying,
   TokenMinimal,
 } from "../redux/endpoints/tokenTypes";
 import TokenIcon from "../token/TokenIcon";
-import { useTokenIsListed } from "../token/useTokenIsListed";
-import TokenDialog, { TokenSelectionProps } from "./TokenDialog";
+import TokenDialog from "./TokenDialog";
 import { Network } from "../network/networks";
+import { EMPTY_ARRAY } from "../../utils/constants";
 
 export const TokenDialogButton: FC<{
   token: TokenMinimal | null | undefined;
-  tokenSelection: TokenSelectionProps;
   ButtonProps?: ButtonProps;
   onTokenSelect: (token: TokenMinimal) => void;
   onBlur?: () => void;
   network: Network;
+  tokens: TokenMinimal[];
+  isTokensFetching: boolean;
+  showUpgrade?: boolean;
 }> = ({
   token = null,
-  tokenSelection,
+  tokens = EMPTY_ARRAY,
+  isTokensFetching = false,
   ButtonProps = {},
   onTokenSelect,
   onBlur = () => { },
   network,
+  showUpgrade = false,
 }) => {
     const [open, setOpen] = useState(false);
-    const isUnderlyingToken = token && isUnderlying(token);
+    const isUnderlyingToken = !token?.isSuperToken;
     const isSuperToken = token && isSuper(token);
-    const [isListed, isListedLoading] = useTokenIsListed(
-      network.id,
-      token?.address
-    );
+    const isListed = isSuperToken ? token.isListed : false;
 
     return (
       <>
@@ -46,9 +46,10 @@ export const TokenDialogButton: FC<{
               <TokenIcon
                 size={24}
                 isSuper={!!isSuperToken}
-                tokenSymbol={token.symbol}
+                chainId={network.id}
+                tokenAddress={token.address}
                 isUnlisted={!isUnderlyingToken && !isListed}
-                isLoading={isListedLoading}
+                isLoading={false}
               />
             )
           }
@@ -80,8 +81,10 @@ export const TokenDialogButton: FC<{
             setOpen(false);
             onBlur();
           }}
-          tokenSelection={tokenSelection}
+          tokens={tokens}
+          isTokensFetching={isTokensFetching}
           network={network}
+          showUpgrade={showUpgrade}
         />
       </>
     );

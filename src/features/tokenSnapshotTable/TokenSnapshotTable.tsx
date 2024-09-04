@@ -19,6 +19,7 @@ import { Network } from "../network/networks";
 import { subgraphApi } from "../redux/store";
 import TokenSnapshotRow from "./TokenSnapshotRow";
 import { FetchingStatus } from "./TokenSnapshotTables";
+import { EMPTY_ARRAY } from "../../utils/constants";
 
 interface TokenSnapshotTableProps {
   address: Address;
@@ -86,27 +87,29 @@ const TokenSnapshotTable: FC<TokenSnapshotTableProps> = ({
                 ...snapshot,
                 isListed: false,
               }))
-              .sort(tokenSnapshotsDefaultSort) || [],
+              .sort(tokenSnapshotsDefaultSort) || EMPTY_ARRAY,
         }),
       }
     );
 
   const tokenSnapshots = useMemo(
     () =>
-      listedTokensSnapshotsQuery.listedTokenSnapshots.concat(
-        unlistedTokensSnapshotsQuery.unlistedTokenSnapshots
-      ),
-    [listedTokensSnapshotsQuery, unlistedTokensSnapshotsQuery]
+      {
+        return listedTokensSnapshotsQuery.listedTokenSnapshots.concat(
+          unlistedTokensSnapshotsQuery.unlistedTokenSnapshots
+        );
+      },
+    [network, listedTokensSnapshotsQuery.data?.items?.length ?? 0, unlistedTokensSnapshotsQuery.data?.items?.length ?? 0]
   );
 
   const { setCosmetics } = useMinigame();
 
+  const isLoading = listedTokensSnapshotsQuery.isLoading || unlistedTokensSnapshotsQuery.isLoading;
+  const hasContent = !!tokenSnapshots.length;
   useEffect(() => {
     fetchingCallback(network.id, {
-      isLoading:
-        listedTokensSnapshotsQuery.isLoading ||
-        unlistedTokensSnapshotsQuery.isLoading,
-      hasContent: !!tokenSnapshots.length,
+      isLoading,
+      hasContent,
     });
 
     if (!network.testnet && tokenSnapshots.length) {
@@ -125,11 +128,11 @@ const TokenSnapshotTable: FC<TokenSnapshotTableProps> = ({
       }
     }
   }, [
-    network.id,
-    listedTokensSnapshotsQuery.isLoading,
-    unlistedTokensSnapshotsQuery.isLoading,
-    tokenSnapshots.length,
+    network,
+    setCosmetics,
     fetchingCallback,
+    isLoading,
+    hasContent
   ]);
 
   if (
