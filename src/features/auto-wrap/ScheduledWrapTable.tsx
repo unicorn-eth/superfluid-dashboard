@@ -73,23 +73,15 @@ const ScheduledWrapTable: FC<TokenSnapshotTableProps> = ({
     [page, rowsPerPage, wrapSchedules.length]
   );
 
-  const { isPlatformWhitelisted_, isLoading: isWhitelistLoading } =
+  const { data: isPlatformWhitelisted, isLoading: isWhitelistLoading } =
     platformApi.useIsAccountWhitelistedQuery(
-      address && network?.platformUrl
+      address
         ? {
           chainId: network.id,
-          baseUrl: network.platformUrl,
           account: address?.toLowerCase(),
         }
-        : skipToken,
-      {
-        selectFromResult: (queryResult) => ({
-          ...queryResult,
-          isPlatformWhitelisted_: !!queryResult.data,
-        }),
-      }
+        : skipToken
     );
-  const isPlatformWhitelisted = Boolean(isPlatformWhitelisted_ || network?.testnet);
 
   const hasContent = !!wrapSchedules.length;
   useEffect(() => {
@@ -102,7 +94,7 @@ const ScheduledWrapTable: FC<TokenSnapshotTableProps> = ({
   useEffect(() => {
     whitelistedCallback(network.id, {
       isLoading: isWhitelistLoading,
-      isWhitelisted: isPlatformWhitelisted,
+      isWhitelisted: !!isPlatformWhitelisted,
     });
   }, [isWhitelistLoading, isPlatformWhitelisted, whitelistedCallback, network.id]);
 

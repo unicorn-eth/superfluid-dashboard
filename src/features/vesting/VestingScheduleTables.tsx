@@ -267,10 +267,9 @@ const VestingScheduleTables: FC<VestingScheduleTablesProps> = ({ }) => {
 
   const { isPlatformWhitelisted_, isLoading: isWhitelistLoading } =
     platformApi.useIsAccountWhitelistedQuery(
-      visibleAddress && network?.platformUrl
+      visibleAddress
         ? {
           chainId: network.id,
-          baseUrl: network.platformUrl,
           account: visibleAddress?.toLowerCase(),
         }
         : skipToken,
