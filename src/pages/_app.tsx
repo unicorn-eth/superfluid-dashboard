@@ -1,4 +1,5 @@
-import "../wdyr";
+// import "../wdyr"; // Un-comment if you want Why-Did-You-Render support
+import '../BigInt.toJson';
 
 import { allNetworks as _importNetworksForInitialization } from "../features/network/networks";
 import { CacheProvider, EmotionCache } from "@emotion/react";
@@ -83,7 +84,6 @@ export default function MyApp(props: AppPropsWithLayout) {
                                 <AnalyticsProvider>
                                   <ToastProvider />
                                   <IntercomProvider>
-                                    <MonitorContext />
                                     <Layout>
                                       <MinigameProvider>
                                         {getLayout(
@@ -91,6 +91,7 @@ export default function MyApp(props: AppPropsWithLayout) {
                                         )}
                                       </MinigameProvider>
                                     </Layout>
+                                    <MonitorContext />
                                   </IntercomProvider>
                                 </AnalyticsProvider>
                               </LayoutContextProvider>

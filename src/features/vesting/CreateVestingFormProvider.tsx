@@ -283,28 +283,28 @@ const CreateVestingFormProvider: FC<{
     defaultValues: {
       data: {
         superTokenAddress: null,
-        totalAmountEther: "",
-        cliffPeriod: {
-          numerator: "",
-          denominator: UnitOfTime.Year,
-        },
+        receiverAddress: null,
         startDate: null,
-        cliffAmountEther: "",
+        totalAmountEther: "",
         vestingPeriod: {
           numerator: "",
           denominator: UnitOfTime.Year,
         },
-        receiverAddress: null,
         cliffEnabled: false,
+        cliffAmountEther: "",
+        cliffPeriod: {
+          numerator: "",
+          denominator: UnitOfTime.Year,
+        },
         setupAutoWrap: false,
         claimEnabled: false
-      },
+      }
     },
     resolver: yupResolver(formSchema as ObjectSchema<PartialVestingForm>),
     mode: "onChange",
   });
 
-  const { clearErrors, setError, control } = formMethods;
+  const { clearErrors, setError } = formMethods;
 
   const [isInitialized, setIsInitialized] = useState(false);
 
