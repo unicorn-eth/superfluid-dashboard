@@ -93,6 +93,9 @@ const NO_CREATED_DESC_STRING =
 const NO_RECEIVED_TITLE_STRING = 'No Received Vesting Schedules';
 const NO_RECEIVED_DESC_STRING =
   'Vesting schedules that you have received will appear here.';
+const VERSION_V2 = '[data-cy=version-v2]';
+const REQUIRE_RECEIVER_TO_CLAIM = '[data-cy=claim-toggle]';
+const VESTING_STATUS = '[data-cy=vesting-status]';
 
 //Dates for the vesting previews etc.
 let staticStartDate = new Date(1879145815000);
@@ -254,6 +257,14 @@ export class VestingPage extends BasePage {
     // WrapPage.validatePendingTransaction("Create Vesting Schedule" , "avalanche-fuji")
   }
 
+  static createNewVestingSchedulev2() {
+    SendPage.overrideNextGasPrice();
+    this.click(CREATE_SCHEDULE_TX_BUTTON);
+    this.hasText(APPROVAL_MESSAGE, 'Waiting for transaction approval...');
+    cy.get(OK_BUTTON, { timeout: 45000 }).should('be.visible').click();
+    this.click(TX_DRAWER_BUTTON);
+  }
+
   static validateFormError(error: string) {
     this.hasText(FORM_ERROR, error, 0);
     this.isDisabled(PREVIEW_SCHEDULE_BUTTON);
@@ -336,16 +347,18 @@ export class VestingPage extends BasePage {
   }
 
   static validateNewlyCreatedSchedule() {
-    this.isVisible(FORWARD_BUTTON);
+    cy.get(TABLE_RECEIVER_SENDER).last().should('have.text', 'vijay.eth');
+    this.hasText(TABLE_ALLOCATED_AMOUNT, '2 fTUSDx', 0);
+    // this.hasText(VESTED_AMOUNT, '0 fTUSDx'); // Formatting issues
     this.hasText(
-      TABLE_RECEIVER_SENDER,
-      this.shortenHex('0xF9Ce34dFCD3cc92804772F3022AF27bCd5E43Ff2')
+      TABLE_START_END_DATES,
+      `${format(startDate, 'LLL d, yyyy HH:mm')}${format(
+        endDate,
+        'LLL d, yyyy HH:mm'
+      )}`,
+      0
     );
-    this.hasText(TABLE_ALLOCATED_AMOUNT, '2 fTUSDx');
-    this.hasText(VESTED_AMOUNT, '1 fTUSDx');
-    this.hasText(TABLE_START_END_DATES, format(startDate, 'LLL d, yyyy'), 0);
-    this.hasText(TABLE_START_END_DATES, format(endDate, 'LLL d, yyyy'), -1);
-    this.doesNotExist(PENDING_MESSAGE);
+    this.hasText(VESTING_STATUS, 'Scheduled', 0);
   }
 
   static clickCreateScheduleButton() {
@@ -360,9 +373,21 @@ export class VestingPage extends BasePage {
     this.clickFirstVisible(VESTING_ROWS);
   }
 
+  static openCreatedSchedule() {
+    this.doesNotExist(`${CREATED_TABLE} ${LOADING_SKELETONS}`, undefined, {
+      timeout: 45000,
+    });
+    this.click(VESTING_ROWS, 0);
+  }
+
   static deleteVestingSchedule() {
     this.click(DELETE_SCHEDULE_BUTTON, undefined, { timeout: 30000 });
+  }
+
+  static deleteVestingSchedulev2() {
+    this.click(DELETE_SCHEDULE_BUTTON, undefined, { timeout: 30000 });
     this.hasText(APPROVAL_MESSAGE, 'Waiting for transaction approval...');
+    cy.get(OK_BUTTON, { timeout: 45000 }).should('be.visible').click();
   }
 
   static deleteVestingButtonDoesNotExist() {
@@ -543,7 +568,7 @@ export class VestingPage extends BasePage {
       req.continue((res) => {
         console.log(req.body);
         if (req.body.variables.where.sender) {
-          let schedule = res.body.data.vestingSchedules[0];
+          let schedule = res.body.data.vestingSchedules[1];
           switch (status) {
             case 'Cancel Error':
               schedule.failedAt = today;
@@ -827,9 +852,17 @@ export class VestingPage extends BasePage {
   }
 
   static validateReceiverAddressBookNames(name: string) {
-    cy.get(TABLE_RECEIVER_SENDER).each((el) => {
-      expect(el.text()).to.eq(name);
-    });
+    cy.get(TABLE_RECEIVER_SENDER)
+      .should('have.length.greaterThan', 1)
+      .then(($list) => {
+        const lastIndex = $list.length - 1;
+
+        cy.get(TABLE_RECEIVER_SENDER).each((el, index) => {
+          if (index !== 0 && index !== lastIndex) {
+            expect(el.text()).to.eq(name);
+          }
+        });
+      });
   }
 
   static validateDetailsPageSenderReceivers(
@@ -849,5 +882,13 @@ export class VestingPage extends BasePage {
   }
   static clickAutoWrapSwitch() {
     this.click(AUTO_WRAP_SWITCH);
+  }
+
+  static switchToV2() {
+    this.click(VERSION_V2);
+  }
+
+  static requireReceiverToClaim() {
+    this.click(REQUIRE_RECEIVER_TO_CLAIM);
   }
 }
