@@ -1,5 +1,5 @@
-import { Box, Button, Stack, Typography } from "@mui/material";
-import { FC, memo, useMemo, useRef, useState } from "react";
+import { Box, Button, FormGroup, FormHelperText, Stack, Typography, useTheme } from "@mui/material";
+import { FC, memo, useMemo } from "react";
 import { useFormContext } from "react-hook-form";
 import { add, format } from "date-fns";
 import { VestingTransactionSectionProps } from "../transactionButtons/VestingTransactionButtonSection";
@@ -20,6 +20,7 @@ import { getTxBuilderInputs_v2 } from "./gnosisSafe";
 import { convertBatchFormToParams } from "./convertBatchFormToParams";
 import { convertVestingScheduleFromAmountAndDurationsToAbsolutes } from "./VestingScheduleParams";
 import { BatchVestingTransactionSection } from "./BatchVestingTransactionSection";
+import Link from "../../common/Link";
 
 interface BatchVestingPreviewProps extends VestingTransactionSectionProps { }
 
@@ -29,6 +30,7 @@ const BatchVestingPreview: FC<BatchVestingPreviewProps> = ({
     setView,
 }) => {
     const { watch } = useFormContext<ValidBatchVestingForm>();
+    const theme = useTheme();
 
     const validForm = watch();
     const formData = validForm.data;
@@ -68,6 +70,15 @@ const BatchVestingPreview: FC<BatchVestingPreviewProps> = ({
             seconds: convertPeriodToSeconds(vestingPeriod)
         },
     );
+
+    const claimingDates = useMemo(() => {
+        if (!claimEnabled) return undefined;
+
+        const claimingStartAt = cliffDate ? cliffDate : startDate;
+        const claimingEndAt = endDate;
+
+        return { claimingStartAt, claimingEndAt };
+    }, [claimEnabled, startDate, cliffDate, endDate]);
 
     return (
         <Stack gap={3}>
@@ -160,50 +171,86 @@ const BatchVestingPreview: FC<BatchVestingPreviewProps> = ({
                     </Box>
                 )}
 
-                <BatchReceiversTable schedules={schedules} token={token} />
+                {
+                    claimingDates && (
+                        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+                            <Stack>
+                                <Typography color="text.secondary">
+                                    {VestingFormLabels.ClaimingStartAt}
+                                </Typography>
+                                <Typography data-cy={"claiming-start-at"}>
+                                    {format(claimingDates.claimingStartAt, "LLLL d, yyyy")}
+                                </Typography>
+                            </Stack>
+
+                            <Stack>
+                                <Typography color="text.secondary">
+                                    {VestingFormLabels.ClaimingEndAt}
+                                </Typography>
+                                <Typography data-cy="claiming-end-at" color="text.primary">
+                                    {format(claimingDates.claimingEndAt, "LLLL d, yyyy")}
+                                </Typography>
+                            </Stack>
+                        </Box>
+                    )
+                }
+
+                <Stack>
+                    <Typography color="text.secondary">
+                        {VestingFormLabels.Receivers}
+                    </Typography>
+                    <BatchReceiversTable schedules={schedules} token={token} />
+                </Stack>
             </Stack>
 
 
             <Stack gap={1}>
                 <BatchVestingTransactionSection token={token} setView={setView} />
 
-                <Button {...transactionButtonDefaultProps} variant="outlined" onClick={async () => {
-                    const zip = new JSZip();
-                    const batchFolder = zip.folder("batch");
+                <FormGroup>
+                    <Button {...transactionButtonDefaultProps} variant="outlined" size="medium" onClick={async () => {
+                        const zip = new JSZip();
+                        const zipName = `vesting-schedules_${scheduleParams.length}_for_safe_tx-builder`;
+                        const batchFolder = zip.folder(zipName);
 
-                    const safeTxBuilderJSONs = await getTxBuilderInputs_v2({
-                        network,
-                        schedules: scheduleParams
-                    });
-
-                    safeTxBuilderJSONs?.forEach((safeTxBuilderJSON, i) => {
-                        const blob = new Blob([JSON.stringify(safeTxBuilderJSON)], {
-                            type: "application/json",
+                        const safeTxBuilderJSONs = await getTxBuilderInputs_v2({
+                            network,
+                            schedules: scheduleParams
                         });
 
-                        batchFolder?.file(`batch-${i}.json`, blob);
-                    });
+                        safeTxBuilderJSONs?.forEach((safeTxBuilderJSON, i) => {
+                            const blob = new Blob([JSON.stringify(safeTxBuilderJSON)], {
+                                type: "application/json",
+                            });
 
-                    const objectURL = URL.createObjectURL(
-                        (await batchFolder?.generateAsync({ type: "blob" })) as Blob
-                    );
+                            batchFolder?.file(`batch-${i}.json`, blob);
+                        });
 
-                    const a = document.createElement('a');
-                    a.href = objectURL;
-                    a.download = 'batch.zip'; // Set the file name
-                    document.body.appendChild(a);
-                    a.click();
+                        const objectURL = URL.createObjectURL(
+                            (await batchFolder?.generateAsync({ type: "blob" })) as Blob
+                        );
 
-                    // Clean up by revoking the object URL and removing the link
-                    URL.revokeObjectURL(objectURL);
-                    document.body.removeChild(a);
+                        const a = document.createElement('a');
+                        a.href = objectURL;
+                        a.download = zipName + ".zip";
+                        document.body.appendChild(a);
+                        a.click();
 
-                }}>
-                    Download Gnosis Safe TX
-                </Button>
+                        // Clean up by revoking the object URL and removing the link
+                        URL.revokeObjectURL(objectURL);
+                        document.body.removeChild(a);
+
+                    }}>
+                        Download Safe Transaction Builder JSON
+                    </Button>
+                    <FormHelperText sx={{ textAlign: "right" }}>
+                        <Link sx={{ color: theme.palette.info.main }} href="https://help.safe.global/en/articles/234052-transaction-builder" target="_blank">
+                            Transaction Builder docs
+                        </Link>
+                    </FormHelperText>
+                </FormGroup>
+
             </Stack>
-
-
         </Stack>
     );
 };

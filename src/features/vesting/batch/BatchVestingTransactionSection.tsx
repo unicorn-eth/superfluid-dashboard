@@ -4,7 +4,7 @@ import { CreateVestingCardView } from "../CreateVestingSection";
 import { ValidBatchVestingForm } from "./BatchVestingFormProvider";
 import { BatchVestingTransactionButton } from "../transactionButtons/BatchVestingTransactionButton";
 import { useCallback, useMemo, useState } from "react";
-import { StepLabel, Stepper } from "@mui/material";
+import { Alert, AlertTitle, StepLabel, Stepper } from "@mui/material";
 import { Stack } from "@mui/material";
 import { Step } from "@mui/material";
 import { useExpectedNetwork } from "../../network/ExpectedNetworkContext";
@@ -20,7 +20,7 @@ export function BatchVestingTransactionSection({
     const { network } = useExpectedNetwork();
     const { watch } = useFormContext<ValidBatchVestingForm>();
     const validForm = watch();
-    const chunkSize = network.testnet ? 2 : 98;
+    const chunkSize = network.testnet ? 5 : 98;
 
     const chunks = useMemo(() => chunkFormData(validForm, chunkSize), [validForm]);
     const hasChunks = chunks.length > 1;
@@ -46,9 +46,14 @@ export function BatchVestingTransactionSection({
         return <BatchVestingTransactionButton setView={setView} validForm={validForm} okBehaviour="redirect" />
     }
 
+    const showVerticalStepper = chunks.length > 6;
+
     return (
         <Stack spacing={3}>
-            <Stepper activeStep={activeStep}>
+            <Alert severity="info">
+                Creation of the vesting schedules was divided into multiple transactions to prevent exceeding the transaction size limit.
+            </Alert>
+            <Stepper activeStep={activeStep} orientation={showVerticalStepper ? "vertical" : "horizontal"} alternativeLabel={!showVerticalStepper}>
                 {chunks.map((_, index) => (
                     <Step key={index}>
                         <StepLabel>{`Batch #${index + 1}`}</StepLabel>

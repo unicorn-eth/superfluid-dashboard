@@ -53,7 +53,7 @@ export const BatchReceiversTable = memo(function ReceiversTable(props: {
                 <TableHead>
                     <TableRow>
                         <TableCell width="64px">Nr</TableCell>
-                        <TableCell>Receiver</TableCell>
+                        <TableCell>Address</TableCell>
                         <TableCell>Allocation</TableCell>
                     </TableRow>
                 </TableHead>
@@ -62,7 +62,7 @@ export const BatchReceiversTable = memo(function ReceiversTable(props: {
                 <TableBody>
                     {schedulesPage.map((schedule, index) => (
                         <TableRow key={index}>
-                            <TableCell width="64px">{index + 1}</TableCell>
+                            <TableCell width="64px">{(page * rowsPerPage) + index + 1}</TableCell>
                             <TableCell>
                                 <Stack direction="row" alignItems="center" gap={1.5}>
                                     <AddressAvatar
@@ -79,7 +79,7 @@ export const BatchReceiversTable = memo(function ReceiversTable(props: {
                                     </AddressCopyTooltip>
                                 </Stack>
                             </TableCell>
-                            <TableCell>{schedule.totalAmountEther}</TableCell>
+                            <TableCell>{schedule.totalAmountEther} {token && <Typography variant="caption" color="text.secondary">{token?.symbol}</Typography>}</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>

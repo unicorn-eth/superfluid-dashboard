@@ -53,6 +53,9 @@ export enum VestingFormLabels {
   TotalVestedAmount = "Total Vested Amount",
   Claim = "Require Receiver to Claim",
   AutoWrap = "Enable Auto-Wrap",
+  ClaimingStartAt = "Claiming Start At",
+  ClaimingEndAt = "Claiming End At",
+  Receivers = "Receivers",
 }
 
 export enum VestingTooltips {
