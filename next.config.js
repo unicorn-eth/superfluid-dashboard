@@ -12,6 +12,7 @@ const netlifyContext = process.env.CONTEXT;
 const isOnNetlify = !!netlifyContext;
 const interfaceFeeAddress = process.env.INTERFACE_FEE_ADDRESS;
 const shouldInstrumentCode = "INSTRUMENT_CODE" in process.env;
+const appUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : process.env.URL;
 
 function withSentryIfNecessary(nextConfig) {
   console.log({
@@ -19,7 +20,8 @@ function withSentryIfNecessary(nextConfig) {
     netlifyContext,
     isOnNetlify,
     interfaceFeeAddress,
-    shouldInstrumentCode
+    shouldInstrumentCode,
+    appUrl
   });
 
   const SENTRY_AUTH_TOKEN = process.env.SENTRY_AUTH_TOKEN;
@@ -69,8 +71,100 @@ const moduleExports = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/streams/:path*',
+        destination: '/streams/[_v1Network]/[_tx]/[_log]/[[..._rest]].html',
+        permanent: false,
+      },
+      {
+        source: '/stream/:path*',
+        destination: '/stream/[_network]/[_stream].html',
+        permanent: false,
+      },
+      {
+        source: '/token/:path*',
+        destination: '/token/[_network]/[_token].html',
+        permanent: false,
+      },
+      {
+        source: '/vesting/:path*',
+        destination: '/vesting/[_network]/[_id].html',
+        permanent: false,
+      },
+      {
+        source: '/dashboard',
+        destination: '/',
+        permanent: true,
+      },
+      {
+        source: '/currencies',
+        destination: '/',
+        permanent: true,
+      },
+      {
+        source: '/transactions',
+        destination: '/',
+        permanent: true,
+      },
+      {
+        source: '/distribution',
+        destination: '/',
+        permanent: true,
+      },
+      {
+        source: '/activities',
+        destination: '/',
+        permanent: true,
+      },
+      {
+        source: '/settings',
+        destination: '/',
+        permanent: true,
+      },
+      {
+        source: '/GT-Walsheim-Pro-Medium.otf',
+        destination: '/fonts/GT-Walsheim-Pro-Medium.otf',
+        permanent: true,
+      },
+      {
+        source: '/GT-Walsheim-Pro-Regular.otf',
+        destination: '/fonts/GT-Walsheim-Pro-Regular.otf',
+        permanent: true,
+      },
+      {
+        source: '/static/:path*',
+        destination: 'https://v1.superfluid.finance/static/:path*',
+        permanent: true,
+      },
+      {
+        source: '/runner',
+        destination: '/superfluid-runner',
+        permanent: true,
+      },
+      {
+        source: '/ecosystem',
+        destination: 'https://www.superfluid.finance/ecosystem',
+        permanent: true,
+      },
+    ];
+  },
+  async headers() {
+    return [
+      {
+        source: '/manifest.json',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+        ],
+      },
+    ];
+  },
   env: {
-    NEXT_PUBLIC_APP_URL: process.env.URL,
+    NEXT_PUBLIC_APP_URL: appUrl,
     NEXT_PUBLIC_SENTRY_ENVIRONMENT: sentryEnvironment,
     NEXT_PUBLIC_NETLIFY_CONTEXT: process.env.CONTEXT, // https://docs.netlify.com/configure-builds/environment-variables/#build-metadata
   },
