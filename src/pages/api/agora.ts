@@ -15,7 +15,7 @@ import { ACL_CREATE_PERMISSION, ACL_DELETE_PERMISSION } from '../../utils/consta
 import { getAddress as getAddress_ } from "ethers/lib/utils"
 import { agoraApiEndpoints, RoundType, roundTypes, START_TIMESTAMP_OF_FIRST_TRANCH_ON_OPTIMISM, tokenAddresses, validChainIds } from '../../features/vesting/agora/constants'
 
-const getAddress = (address: string) => getAddress_(address) as Address;
+// # Agora
 
 // Note: Pre-defining this because yup was not able to infer the types correctly for the transforms...
 type AgoraResponseEntry = {
@@ -28,12 +28,7 @@ type AgoraResponseEntry = {
 };
 type AgoraResponse = Array<AgoraResponseEntry>;
 
-// TODO: It would super helpful if:
-// - in the response, it would be clear which amounts were for which wallets
-// - when was the start date and when will be the end date for a tranch
-// Until then, I'm better off handling only the first creation case.
-// Until I get that, I might be better for setting up a dummy API endpoint myself...
-// Hmm, could I figure out that data by looking at all the vesting schedles???
+const getAddress = (address: string) => getAddress_(address) as Address;
 
 export const agoraResponseEntrySchema = yup.object({
     id: yup.string().required('ID is required'),
@@ -57,8 +52,9 @@ export const agoraResponseEntrySchema = yup.object({
 }) as unknown as yup.Schema<AgoraResponseEntry>;
 
 export const agoraResponseSchema = yup.array().of(agoraResponseEntrySchema).required('Response array is required') as unknown as yup.Schema<AgoraResponse>;
+// ---
 
-// Map this data into a more readable state...
+// # Core types
 type TranchPlan = {
     tranchCount: 6
     currentTranchCount: number
@@ -70,6 +66,38 @@ type TranchPlan = {
     }[]
 }
 
+export type ProjectsOverview = {
+    key: string
+    chainId: number
+    superTokenAddress: string
+    senderAddress: string
+    tranchPlan: TranchPlan
+    projects: ProjectState[]
+    allowanceActions: AllowanceActions[]
+}
+
+export type ProjectState = {
+    agoraEntry: AgoraResponseEntry
+
+    agoraTotalAmount: string
+    subgraphTotalAmount: string
+
+    currentWallet: Address
+    previousWallet: Address | null
+
+    activeSchedule: VestingSchedule | null
+    allRelevantSchedules: VestingSchedule[]
+
+    allocations: {
+        tranch: number
+        amount: string
+    }[]
+
+    projectActions: ProjectActions[]
+}
+// ---
+
+// # Actions
 type ActionType = "create-vesting-schedule" | "update-vesting-schedule" | "stop-vesting-schedule" | "increase-token-allowance" | "increase-flow-operator-permissions"
 
 type Action<TType extends ActionType, TPayload extends Record<string, unknown>> = {
@@ -124,49 +152,9 @@ type SetFlowOperatorPermissionsAction = Action<"increase-flow-operator-permissio
 export type AllowanceActions = TokenAllowanceAction | SetFlowOperatorPermissionsAction
 export type ProjectActions = CreateVestingScheduleAction | UpdateVestingScheduleAction | StopVestingScheduleAction
 export type Actions = AllowanceActions | ProjectActions
+// ---
 
-export type ProjectsOverview = {
-    key: string
-    chainId: number
-    superTokenAddress: string
-    senderAddress: string
-    tranchPlan: TranchPlan
-    projects: ProjectState[]
-    allowanceActions: AllowanceActions[]
-}
-
-export type ProjectState = {
-    agoraEntry: AgoraResponseEntry
-
-    agoraTotalAmount: string
-    subgraphTotalAmount: string
-
-    currentWallet: Address
-    previousWallet: Address | null
-
-    activeSchedule: VestingSchedule | null
-    allRelevantSchedules: VestingSchedule[]
-
-    allocations: {
-        tranch: number
-        amount: string
-    }[]
-
-    projectActions: ProjectActions[]
-}
-
-
-export type AgoraResponseData = {
-    success: true
-    projectsOverview: ProjectsOverview
-} | {
-    success: false
-    message: string
-}
-
-// TODO: Should the Effect errors inherit from Error class?
-// Answer: Doesn't need to be but I went with it anyway.
-
+// # Errors
 class AgoraError extends Error {
     readonly _tag = 'AgoraError'
 }
@@ -177,6 +165,16 @@ class SubgraphError extends Error {
 
 class PublicClientRpcError extends Error {
     readonly _tag = 'PublicClientRpcError'
+}
+// ---
+
+// # API
+export type AgoraResponseData = {
+    success: true
+    projectsOverview: ProjectsOverview
+} | {
+    success: false
+    message: string
 }
 
 export default async function handler(
@@ -239,7 +237,6 @@ export default async function handler(
         })
     }
 
-    // Optionally validate that the chainId is one we support
     if (!validChainIds.includes(chainId)) {
         return res.status(400).json({
             success: false,
@@ -267,7 +264,7 @@ export default async function handler(
     const token = tokenAddresses[network.id as keyof typeof tokenAddresses];
     const isProd = chainId === optimism.id;
 
-    const main = E.gen(function* () {
+    const mainEffect = E.gen(function* () {
 
         const dataFromAgora = yield* pipe(
             E.tryPromise({
@@ -278,10 +275,10 @@ export default async function handler(
                                 'Authorization': `Bearer ${process.env.AGORA_API_KEY}`
                             }
                         })
-                        return await res.json()
+                        return await res.json() as AgoraResponse
                     } else {
                         const res = await fetch(agoraApiEndpoint + `?tranch=${tranch}`)
-                        return await res.json()
+                        return await res.json() as AgoraResponse
                     }
                 },
                 catch: (error) => {
@@ -291,18 +288,18 @@ export default async function handler(
             E.retry({
                 times: 5
             }),
-            E.tap(() => E.logTrace("Fetched data from Agora")),
             E.map(x => {
                 if (!Array.isArray(x)) {
-                    return E.fail(new AgoraError("Invalid data from Agora: response is not an array"))
+                    throw new AgoraError("Invalid data from Agora: response is not an array")
                 }
                 return x;
             }),
+            E.tap((x) => E.logTrace(`Fetched ${x.length} rows from Agora.`)),
             E.flatMap(response => E.forEach(response, entry =>
                 E.tryPromise(() => agoraResponseEntrySchema.validate(entry))
                     .pipe(
                         E.catchAll(error =>
-                            E.logError(`Invalid data from Agora for project ${entry.projectId || 'unknown'}: validation failed`, { cause: error }).pipe(
+                            E.logError(`Invalid data from Agora for project ${entry.projectIds.join(', ') || 'unknown'}: validation failed`, { cause: error }).pipe(
                                 E.flatMap(() => E.succeed(null))
                             )
                         )
@@ -348,6 +345,7 @@ export default async function handler(
                 };
             })
         }
+
         const claimEndDate = tranchPlan.tranches[tranchPlan.tranches.length - 1].endTimestamp + UnitOfTime.Year;
         function getClaimPeriod(startTimestamp: number) {
             if (startTimestamp > claimEndDate) {
@@ -364,10 +362,10 @@ export default async function handler(
 
         yield* E.logTrace("Validating no wallet appears in multiple rows");
         for (const row of dataFromAgora) {
-            // Note: we use uniq here because I allow the scenario that for a single project there are duplicates.
+            // Note: we use uniq here because we allow the scenario that for a single project there are duplicates.
             for (const wallet of uniq(row.wallets)) {
                 if (walletToRowMap.has(wallet)) {
-                    const existingProject = walletToRowMap.get(wallet);
+                    const existingProject = walletToRowMap.get(wallet)!;
                     const duplicateEntry = duplicateWallets.find(d => d.wallet === wallet);
 
                     if (duplicateEntry) {
@@ -375,7 +373,7 @@ export default async function handler(
                     } else {
                         duplicateWallets.push({
                             wallet,
-                            projects: [existingProject!, row.id]
+                            projects: [existingProject, row.id]
                         });
                     }
                 } else {
@@ -385,13 +383,11 @@ export default async function handler(
         }
 
         if (duplicateWallets.length > 0) {
-            // TODO: Ignore this error for now has there are some in the test data...
-            // yield* E.fail(new AgoraError(
-            //     `Found wallets assigned to multiple projects: ${JSON.stringify(duplicateWallets, null, 2)}`
-            // ));
+            yield* E.fail(new AgoraError(
+                `Found wallets assigned to multiple projects: ${JSON.stringify(duplicateWallets, null, 2)}`
+            ));
         }
         // ---
-
 
         const subgraphSdk = tryGetBuiltGraphSdkForNetwork(network.id);
         if (!subgraphSdk) {
@@ -407,8 +403,8 @@ export default async function handler(
         yield* E.logTrace(`Fetching vesting schedules for ${allReceiverAddresses_bothActiveAndInactive.length} wallets`);
         const vestingSchedulesFromSubgraph = yield* pipe(
             E.tryPromise({
-                try: () => {
-                    return subgraphSdk.getVestingSchedules({
+                try: async () => {
+                    const { vestingSchedules } = await subgraphSdk.getVestingSchedules({
                         where: {
                             superToken: token.toLowerCase(),
                             sender: sender.toLowerCase(),
@@ -416,6 +412,7 @@ export default async function handler(
                             // What statuses to check so it would be active? Note: Might be fine to just filter later.
                         }
                     })
+                    return vestingSchedules;
                 },
                 catch: (error) => {
                     return new SubgraphError("Failed to fetch vesting schedules from subgraph", { cause: error })
@@ -424,12 +421,17 @@ export default async function handler(
             E.retry({
                 times: 3
             }),
-            E.tap(({ vestingSchedules }) => E.logTrace(`Fetched ${vestingSchedules.length} vesting schedules from subgraph`)),
-            E.map(subgraphResponse =>
-                subgraphResponse.vestingSchedules.map(vestingSchedule =>
+            E.tap(vestingSchedules => E.logTrace(`Fetched ${vestingSchedules.length} vesting schedules from subgraph`)),
+            E.map(vestingSchedules => {
+                if (vestingSchedules.length >= 1000) {
+                    throw new SubgraphError("Received more than 1000 vesting schedules from subgraph. This shouldn't happen. Please investigate!");
+                }
+                return vestingSchedules;
+            }),
+            E.map(vestingSchedules =>
+                vestingSchedules.map(vestingSchedule =>
                     mapSubgraphVestingSchedule(vestingSchedule)
-                )
-                    .filter(x => !x.status.isDeleted) // TODO: Consider this filter...
+                ).filter(x => !x.status.isDeleted)
             )
         );
 
@@ -446,8 +448,6 @@ export default async function handler(
 
                 if (agoraCurrentWallet === agoraPreviousWallet) {
                     agoraPreviousWallet = null;
-                    // TODO: Handle this better
-                    // return yield* E.die(new Error("Current and previous wallets are the same. Not prepared for this situation!"));
                 }
 
                 const allRelevantVestingSchedules = vestingSchedulesFromSubgraph.filter(x => walletsLowerCased.includes(x.receiver.toLowerCase()));
@@ -482,7 +482,7 @@ export default async function handler(
                         .reduce((sum, amount) => sum + BigInt(amount || 0), 0n);
                     const didKycGetJustApproved = allRelevantVestingSchedules.length === 0;
                     const cliffAmount = 0n; // Note: Cliff will always be 0. We decided to disable this feature.
-                    // didKycGetJustApproved ? sumOfPreviousTranches : 0n;
+                    // The old cliff logic: didKycGetJustApproved ? sumOfPreviousTranches : 0n;
                     const totalAmount = agoraCurrentAmount + cliffAmount;
                     const currentTranch = tranchPlan.tranches[tranchPlan.currentTranchCount - 1];
 
@@ -547,9 +547,6 @@ export default async function handler(
                         }
 
                         const isFundingJustChangedForProject = agoraTotalAmount > subgraphTotalAmount;
-
-                        // TODO: Consider scenarios where it's off by very small amounts, and whether it can happen bacause of minute calculation issues
-                        // TODO: Log something meaningful here
 
                         if (isFundingJustChangedForProject) {
                             if (agoraCurrentAmount === 0n) {
@@ -701,18 +698,32 @@ export default async function handler(
         }
     })
 
-    // Look at create commands and sum up the expected flow rates for flow rate allowance
-    // The token allowance should be the sum of all tranches
-
-    const projectsOverview = await E.runPromise(
+    const effectResult = await E.runPromise(
         pipe(
-            main,
+            mainEffect,
+            E.tapError((error) => E.logError("Error in the main pipeline", { cause: error })), // Directly log the error object
+            E.match({
+                onSuccess: (projectsOverview): AgoraResponseData => ({
+                    success: true,
+                    projectsOverview
+                }),
+                onFailure: (error): AgoraResponseData => { // error type is still inferred
+                    // Determine the user-facing error message based on the error type
+                    const userMessage = error instanceof AgoraError ? "Agora API error occurred." :
+                                        error instanceof SubgraphError ? "Subgraph data retrieval error occurred." :
+                                        error instanceof PublicClientRpcError ? "RPC interaction error occurred." :
+                                        "An unexpected error occurred.";
+
+                    return {
+                        success: false,
+                        message: userMessage
+                    };
+                }
+            }),
+            // Apply overall logging level configuration
             Logger.withMinimumLogLevel(process.env.NODE_ENV === 'development' ? LogLevel.Trace : LogLevel.Info)
         )
     );
 
-    res.status(200).json({
-        success: true,
-        projectsOverview
-    })
+    res.status(effectResult.success ? 200 : 500).json(effectResult);
 }
