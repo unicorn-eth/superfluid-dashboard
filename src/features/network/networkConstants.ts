@@ -73,6 +73,11 @@ export const vestingContractAddresses_v2 = {
   base: "0x7b77A34b8B76B66E97a5Ae01aD052205d5cbe257",
 } as const;
 
+export const vestingContractAddresses_v3 = {
+  [chainIds.optimismSepolia]: "0x4F4BC2ca9A7CA26AfcFabc6A2A381c104927D72C",
+  [chainIds.optimism]: "0x5aB84e4B3a5F418c95B77DbdecFAF18D0Fd3b3E4"
+} as const;
+
 export const vestingSubgraphUrls = {
   gnosis:
     "https://subgraph-endpoints.superfluid.dev/xdai-mainnet/vesting-scheduler",
