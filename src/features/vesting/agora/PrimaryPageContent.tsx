@@ -97,7 +97,7 @@ export function PrimaryPageContent(props: {
     return (
         <>
             <Typography variant="h6" gutterBottom>
-                Projects Overview ({projectCount} projects, {rowCount} rows, {kycRowCount} KYC'd)
+                Projects Overview ({projectCount} projects, {rowCount} rows, {kycRowCount} KYC{"'"}d)
             </Typography>
 
             <ProjectsTable
