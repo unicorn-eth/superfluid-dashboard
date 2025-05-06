@@ -8,7 +8,7 @@ import {
   useGridApiContext,
 } from "@mui/x-data-grid";
 import { skipToken } from "@reduxjs/toolkit/dist/query";
-import { format, fromUnixTime, getUnixTime } from "date-fns";
+import { fromUnixTime, getUnixTime } from "date-fns";
 import Decimal from "decimal.js";
 import uniq from "lodash/fp/uniq";
 import { FC, useMemo, useState } from "react";
@@ -154,7 +154,7 @@ const AccountingExportPreview: FC<AccountingExportPreviewProps> = ({ }) => {
         type: "date",
         minWidth: 120,
         valueGetter: (params: GridValueGetterParams) =>
-          format(fromUnixTime(params.row.endTime), "yyyy/MM/dd"),
+          fromUnixTime(params.row.endTime),
       },
       {
         field: "startDate",
@@ -163,7 +163,7 @@ const AccountingExportPreview: FC<AccountingExportPreviewProps> = ({ }) => {
         minWidth: 120,
         hide: true,
         valueGetter: (params: GridValueGetterParams) =>
-          format(fromUnixTime(params.row.startTime), "yyyy/MM/dd"),
+          fromUnixTime(params.row.startTime)
       },
       {
         field: "amount",
@@ -315,9 +315,10 @@ const AccountingExportPreview: FC<AccountingExportPreviewProps> = ({ }) => {
     [currency, mappedAddresses, lowerCaseAddresses]
   );
 
-  const [pageSize, setPageSize] = useState(10);
-
-  const onPageSizeChange = (newPageSize: number) => setPageSize(newPageSize);
+  const [paginationModel, setPaginationModel] = useState({
+    pageSize: 10,
+    page: 0,
+  });
 
   return (
     <Paper elevation={1}>
@@ -335,15 +336,15 @@ const AccountingExportPreview: FC<AccountingExportPreviewProps> = ({ }) => {
             sortModel: [{ field: "date", sort: "asc" }],
           },
         }}
-        disableSelectionOnClick
+        disableRowSelectionOnClick
         rows={virtualStreamPeriods}
         columns={columns}
-        pageSize={pageSize}
+        paginationModel={paginationModel}
+        onPaginationModelChange={setPaginationModel}
         loading={
           streamPeriodsResponse.isLoading || streamPeriodsResponse.isFetching
         }
-        rowsPerPageOptions={[10, 25, 50]}
-        onPageSizeChange={onPageSizeChange}
+        pageSizeOptions={[10, 25, 50]}
         components={{
           Toolbar: CustomToolbar,
         }}
