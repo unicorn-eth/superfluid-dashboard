@@ -5,18 +5,14 @@
 import * as Sentry from "@sentry/nextjs";
 import { ErrorEvent as SentryErrorEvent, EventHint } from "@sentry/nextjs";
 import { IsCypress } from "./src/utils/SSRUtils";
-
-const SENTRY_DSN = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
-const SENTRY_ENVIRONMENT =
-  process.env.SENTRY_ENVIRONMENT || process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT;
-
-const isProduction = SENTRY_ENVIRONMENT === "production";
+import { SENTRY_DSN, SENTRY_ENVIRONMENT, isBrowser } from "./sentry";
 
 if (!IsCypress && SENTRY_DSN) {
   Sentry.init({
     dsn: SENTRY_DSN,
     // Adjust this value in production, or use tracesSampler for greater control
-    tracesSampleRate: isProduction ? 0.2 : 0.6,
+    tracesSampleRate: 0, // Disable traces as we don't really use them.
+    // isProduction ? 0.2 : 0.6,
     environment: SENTRY_ENVIRONMENT,
     beforeBreadcrumb(breadcrumb, hint) {
       // Inspired by: https://github.com/getsentry/sentry-javascript/issues/3015#issuecomment-718594200
@@ -43,6 +39,26 @@ if (!IsCypress && SENTRY_DSN) {
     // Note: if you want to override the automatic release value, do not set a
     // `release` value here - use the environment variable `SENTRY_RELEASE`, so
     // that it will also get attached to your source maps
+
+    integrations:
+      isBrowser ?
+        [
+          Sentry.captureConsoleIntegration({
+            levels: ["error"]
+          }),
+          Sentry.thirdPartyErrorFilterIntegration({
+            // Specify the application keys that you specified in the Sentry bundler plugin
+            filterKeys: ["superfluid-dashboard"],
+            // Defines how to handle errors that contain third party stack frames.
+            // Possible values are:
+            // - 'drop-error-if-contains-third-party-frames'
+            // - 'drop-error-if-exclusively-contains-third-party-frames'
+            // - 'apply-tag-if-contains-third-party-frames'
+            // - 'apply-tag-if-exclusively-contains-third-party-frames'
+            behaviour: "drop-error-if-exclusively-contains-third-party-frames",
+          }),
+        ] : [],
+      sendDefaultPii: false
   });
 } else {
   console.warn("Sentry not initialized on the client.");
@@ -65,3 +81,5 @@ export const addBeforeSend = (callback: BeforeSendFunc) => {
 export const removeBeforeSend = (callback: BeforeSendFunc) => {
   beforeSendCallbacks.splice(beforeSendCallbacks.indexOf(callback), 1);
 };
+
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

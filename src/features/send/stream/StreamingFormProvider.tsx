@@ -14,6 +14,9 @@ import { SCHEDULE_START_END_MIN_DIFF_S } from "../stream/SendStream";
 import useCalculateBufferInfo from "../useCalculateBufferInfo";
 import { useVisibleAddress } from "../../wallet/VisibleAddressContext";
 import { CommonFormEffects } from "../../common/CommonFormEffects";
+import { useBalance } from "wagmi";
+import { BigNumber } from "ethers";
+import { getIntefaceFee } from "@/features/interfaceFees";
 
 export type ValidStreamingForm = {
   data: {
@@ -63,13 +66,16 @@ export interface StreamingFormProviderProps {
 const StreamingFormProvider: FC<
   PropsWithChildren<StreamingFormProviderProps>
 > = ({ children, initialFormValues }) => {
-  const { visibleAddress } = useVisibleAddress();
-  const { network, stopAutoSwitchToWalletNetwork } = useExpectedNetwork();
+  const { visibleAddress, isEOA } = useVisibleAddress();
+  const { network } = useExpectedNetwork();
   
   const [queryRealtimeBalance] = rpcApi.useLazyRealtimeBalanceQuery();
   const [queryActiveFlow] = rpcApi.useLazyGetActiveFlowQuery();
   const calculateBufferInfo = useCalculateBufferInfo();
   const [tokenBufferTrigger] = rpcApi.useLazyTokenBufferQuery();
+  const { data: balance } = useBalance({
+    address: visibleAddress
+  });
 
   const [MIN_DATE_UNIX, MAX_DATE_UNIX] = useMemo(
     () => [
@@ -225,6 +231,17 @@ const StreamingFormProvider: FC<
                 });
               }
             }
+
+            if (balance && !activeFlow) {            
+              const interfaceFee = getIntefaceFee("createStream", network.id, !!isEOA);
+              const balanceAfterInterfaceFee = BigNumber.from(balance.value.toString()).sub(interfaceFee);
+  
+              if (balanceAfterInterfaceFee.isNegative()) {
+                handleHigherOrderValidationError({
+                  message: `You do not have enough ${network.nativeCurrency.symbol} balance to cover the interface fee.`,
+                });
+              }
+            }
           }
         }
 
@@ -234,12 +251,12 @@ const StreamingFormProvider: FC<
 
         return true;
       }),
-    [network, visibleAddress, calculateBufferInfo]
+    [network, visibleAddress, calculateBufferInfo, balance, isEOA]
   );
 
   const formMethods = useForm<PartialStreamingForm, undefined, ValidStreamingForm>({
     defaultValues: defaultFormValues,
-    resolver: yupResolver(formSchema as ObjectSchema<PartialStreamingForm>),
+    resolver: yupResolver(formSchema) as any,
     mode: "onChange",
   });
 

@@ -6,14 +6,14 @@ import {
   addBeforeSend,
   BeforeSendFunc,
   removeBeforeSend,
-} from "../../../sentry.client.config";
+} from "../../../instrumentation-client";
 import { useExpectedNetwork } from "../../features/network/ExpectedNetworkContext";
 import {
   listenerMiddleware,
   RootState,
   transactionTracker,
 } from "../../features/redux/store";
-import { useAccount } from "wagmi";
+import { useAccount } from "@/hooks/useAccount"
 import { supportId } from "../../features/analytics/useAppInstanceDetails";
 import { useAnalytics } from "../../features/analytics/useAnalytics";
 import { transactionTrackerSelectors } from "@superfluid-finance/sdk-redux";

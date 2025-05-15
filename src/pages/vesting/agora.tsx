@@ -1,8 +1,8 @@
 import { Box, Button, Container, FormControl, InputLabel, MenuItem, Paper, Select, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
-import { skipToken } from "@reduxjs/toolkit/dist/query";
+import { skipToken } from "@reduxjs/toolkit/query";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { useAccount } from "wagmi";
+import { useAccount } from "@/hooks/useAccount"
 import { useExpectedNetwork } from "../../features/network/ExpectedNetworkContext";
 import { BigLoader } from "../../features/vesting/BigLoader";
 import { useVisibleAddress } from "../../features/wallet/VisibleAddressContext";

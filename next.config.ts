@@ -3,26 +3,32 @@
 // https://nextjs.org/docs/api-reference/next.config.js/introduction
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
-const { withSentryConfig } = require("@sentry/nextjs");
+import { withSentryConfig } from "@sentry/nextjs";
+import { NextConfig } from "next";
 
 const sentryEnvironment =
   process.env.SENTRY_ENVIRONMENT || process.env.CONTEXT;
 
 const netlifyContext = process.env.CONTEXT;
 const isOnNetlify = !!netlifyContext;
-const interfaceFeeAddress = process.env.INTERFACE_FEE_ADDRESS;
+const interfaceFeeAddress = process.env.NEXT_PUBLIC_INTERFACE_FEE_ADDRESS;
 const shouldInstrumentCode = "INSTRUMENT_CODE" in process.env;
 const appUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : process.env.URL ?? "http://localhost:3000";
-const enableReactCompiler = process.env.NODE_ENV !== "development";
+const enableReactCompiler = false;
+  // process.env.NODE_ENV !== "development";
+const sentryOrg = process.env.SENTRY_ORG;
+const sentryProject = process.env.SENTRY_PROJECT;
 
-function withSentryIfNecessary(nextConfig) {
+function withSentryIfNecessary(nextConfig: NextConfig) {
   console.log({
     sentryEnvironment,
     netlifyContext,
     isOnNetlify,
     interfaceFeeAddress,
     shouldInstrumentCode,
-    appUrl
+    appUrl,
+    sentryOrg,
+    sentryProject
   });
 
   const SENTRY_AUTH_TOKEN = process.env.SENTRY_AUTH_TOKEN;
@@ -38,21 +44,52 @@ function withSentryIfNecessary(nextConfig) {
   // ensure that your source maps include changes from all other Webpack plugins
   // NOTE from developer: withTM is also recommended to keep last.
   return withSentryConfig(nextConfig, {
+    org: sentryOrg,
+    project: sentryProject,
+
     // Additional config options for the Sentry Webpack plugin. Keep in mind that
     // the following options are set automatically, and overriding them is not
     // recommended:
     //   release, url, org, project, authToken, configFile, stripPrefix,
     //   urlPrefix, include, ignore
-    env: sentryEnvironment,
     silent: true, // Suppresses all logs
     // For all available options, see:
     // https://github.com/getsentry/sentry-webpack-plugin#options.
-    hideSourceMaps: true, // If this not specified as `true` then Sentry will expose the production source maps. We've decided to expose the source maps though.
+
+    // Upload a larger set of source maps for prettier stack traces (increases build time)
+    widenClientFileUpload: true,
+
+    // Automatically tree-shake Sentry logger statements to reduce bundle size
+    disableLogger: true,
+
+    // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
+    // See the following for more information:
+    // https://docs.sentry.io/product/crons/
+    // https://vercel.com/docs/cron-jobs
+    automaticVercelMonitors: true,
+
+    sourcemaps: {
+      // Don't serve sourcemaps to the users
+      deleteSourcemapsAfterUpload: true,
+    },
+
+    // TODO: This was causing build issues on Vercel. Stuff like address dialog not selecting addresses.
+    // // The thirdPartyErrorFilterIntegration allows you to filter out errors originating from third parties,
+    // // such as browser extensions, code-injecting browsers, or widgets from third-party services that also use Sentry.
+    // // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/filtering/#using-thirdpartyerrorfilterintegration
+    unstable_sentryWebpackPluginOptions: {
+      applicationKey: "superfluid-dashboard",
+    },
+
+    // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
+    // This can increase your server load as well as your hosting bill.
+    // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
+    // side errors will fail.
+    tunnelRoute: "/monitoring",
   });
 }
 
-/** @type {import('next').NextConfig} */
-const moduleExports = {
+const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
     loader: "custom",
@@ -71,6 +108,12 @@ const moduleExports = {
       },
     ],
   },
+  rewrites: async () => [
+    {
+      source: "/monitoring",
+      destination: "/api/monitoring",
+    },
+  ],
   env: {
     NEXT_PUBLIC_APP_URL: appUrl,
     NEXT_PUBLIC_SENTRY_ENVIRONMENT: sentryEnvironment,
@@ -90,4 +133,4 @@ const moduleExports = {
   }
 };
 
-module.exports = withSentryIfNecessary(moduleExports);
+export default withSentryIfNecessary(nextConfig);

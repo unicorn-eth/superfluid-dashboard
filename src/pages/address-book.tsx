@@ -14,7 +14,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { skipToken } from "@reduxjs/toolkit/dist/query";
+import { skipToken } from "@reduxjs/toolkit/query";
 import { Address } from "@superfluid-finance/sdk-core";
 import { NextPage } from "next";
 import { parse, unparse } from "papaparse";
@@ -48,7 +48,7 @@ import { useVisibleAddress } from "../features/wallet/VisibleAddressContext";
 import { publicClientToProvider } from "../utils/wagmiEthersAdapters";
 import { resolvedWagmiClients } from "../features/wallet/WagmiManager";
 import { efpApi } from "../features/efp/efpApi.slice";
-import { useAccount } from "wagmi";
+import { useAccount } from "@/hooks/useAccount"
 import Link from "next/link";
 import AddressBookLoadingRow from "../features/addressBook/AddressBookLoadingRow";
 import AddressBookMobileLoadingRow from "../features/addressBook/AddressBookMobileLoadingRow";

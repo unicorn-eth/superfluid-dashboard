@@ -18,7 +18,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { skipToken } from "@reduxjs/toolkit/dist/query";
+import { skipToken } from "@reduxjs/toolkit/query";
 import { Address } from "@superfluid-finance/sdk-core";
 import { format } from "date-fns";
 import { BigNumber } from "ethers";
@@ -330,7 +330,7 @@ const StreamPageContent: FC<{
     onlySuperToken: true
   })
 
-  const { data: isHumaFinanceOperatedStream } =
+  const { currentData: isHumaFinanceOperatedStream } =
     subgraphApi.useIsHumaFinanceOperatorStreamQuery(
       network.humaFinance
         ? {
