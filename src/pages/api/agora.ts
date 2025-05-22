@@ -43,7 +43,12 @@ export const agoraResponseEntrySchema = yup.object({
     // Note about KYC: the typo is also in the API
     KYCStatusCompleted: yup.boolean().required('KYC status is required'),
     amounts: yup.array().of(
-        yup.string().trim().required().test(testWeiAmount({
+        yup.string().trim().required().transform(x => {
+            if (x === null) {
+                return '0';
+            }
+            return x;
+        }).test(testWeiAmount({
             notNegative: true,
             notZero: false,
         }))
@@ -320,17 +325,16 @@ export default async function handler(
         const currentTranchCount = dataFromAgora[0].amounts.length;
         const tranchDuration = 1 * UnitOfTime.Month;
 
-        // Calculate which tranch index is current (0-based)
-        const currentTranchIndex = currentTranchCount - 1;
-
         const tranchCount = 6;
         const tranchPlan: TranchPlan = {
             tranchCount,
             currentTranchCount,
             totalDurationInSeconds: tranchCount * tranchDuration,
             tranches: Array(tranchCount).fill(null).map((_, index) => {
+                // Reminder: index is 0-based
+
                 // Calculate offset from current tranch
-                const offset = (index - currentTranchIndex) * tranchDuration;
+                const offset = index * tranchDuration;
 
                 // Start time is now plus offset (negative for past tranches, positive for future)
                 const startTimestamp = startOfTranchOne + offset;
@@ -469,15 +473,15 @@ export default async function handler(
                         return actions;
                     }
 
+                    if (!row.KYCStatusCompleted) {
+                        return actions;
+                    }
+
                     function pushAction(action: Omit<ProjectActions, "id">) {
                         actions.push({
                             ...action,
                             id: sha256(stringToHex(`${row.id}-${action.type}-${JSON.stringify(action.payload)}`))
                         } as ProjectActions)
-                    }
-
-                    if (!row.KYCStatusCompleted) {
-                        return [];
                     }
 
                     const _sumOfPreviousTranches = row.amounts
@@ -519,20 +523,22 @@ export default async function handler(
                                 }
                             })
                         } else {
-                            pushAction({
-                                type: "create-vesting-schedule",
-                                payload: {
-                                    superToken: token,
-                                    sender,
-                                    receiver: agoraCurrentWallet,
-                                    startDate: currentTranch.startTimestamp,
-                                    totalAmount: missingAmount.toString(),
-                                    totalDuration: currentTranch.totalDuration,
-                                    cliffAmount: "0",
-                                    cliffPeriod: 0,
-                                    claimPeriod: getClaimPeriod(currentTranch.startTimestamp)
-                                }
-                            })
+                            if (missingAmount > 0n) {
+                                pushAction({
+                                    type: "create-vesting-schedule",
+                                    payload: {
+                                        superToken: token,
+                                        sender,
+                                        receiver: agoraCurrentWallet,
+                                        startDate: currentTranch.startTimestamp,
+                                        totalAmount: missingAmount.toString(),
+                                        totalDuration: currentTranch.totalDuration,
+                                        cliffAmount: "0",
+                                        cliffPeriod: 0,
+                                        claimPeriod: getClaimPeriod(currentTranch.startTimestamp)
+                                    }
+                                })
+                            }
                         }
                     } else {
                         // isAlreadyVestingToRightWallet === true
