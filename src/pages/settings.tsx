@@ -10,6 +10,7 @@ import NoWalletConnected from "../components/NoWalletConnected/NoWalletConnected
 import { TokenAccessTables } from "../features/tokenAccess/TokenAccessTables";
 import { useVisibleAddress } from "../features/wallet/VisibleAddressContext";
 
+
 const SettingsPage: NextPage = () => {
   const { address } = useAccount();
   const { visibleAddress } = useVisibleAddress();

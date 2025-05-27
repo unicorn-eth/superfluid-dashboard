@@ -44,6 +44,7 @@ import { NextPageWithLayout } from "../../_app";
 import { useTokenQuery } from "../../../hooks/useTokenQuery";
 import { VestingScheduleUpdatedEvent } from "../../../vesting-subgraph/vestingEvents";
 
+
 interface VestingLegendItemProps {
   title: string;
   color: string;

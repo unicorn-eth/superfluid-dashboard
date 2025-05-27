@@ -13,6 +13,7 @@ import { PrimaryPageContent } from "../../features/vesting/agora/PrimaryPageCont
 import { RoundType, roundTypes } from "../../features/vesting/agora/constants";
 import { optimismSepolia } from "wagmi/chains";
 
+
 const AgoraPage: NextPageWithLayout = () => {
     const { visibleAddress } = useVisibleAddress();
     const { network } = useExpectedNetwork();
