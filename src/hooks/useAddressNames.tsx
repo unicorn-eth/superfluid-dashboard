@@ -1,22 +1,17 @@
 import { useEffect, useState } from "react";
 import { addressBookSelectors } from "../features/addressBook/addressBook.slice";
-import { ensApi } from "../features/ens/ensApi.slice";
 import { useAppSelector } from "../features/redux/store";
 import { getAddress } from "../utils/memoizedEthersUtils";
 import { AddressNameResult } from "./useAddressName";
-import { lensApi } from "../features/lens/lensApi.slice";
-import { getTOREXInfo } from "../features/torex/torexAddresses";
+import { whoisApi, SuperfluidProfile } from "../features/whois/whoisApi.slice";
 
 interface AddressNames {
   [any: string]: AddressNameResult;
 }
 
 const useAddressNames = (addresses: string[]): AddressNames => {
-  const [ensLookupQueryTrigger] = ensApi.useLazyLookupAddressQuery();
-  const [lensLookupQueryTrigger] = lensApi.useLazyLookupAddressQuery();
-
-  const [ensNames, setEnsNames] = useState<{ [any: string]: string }>({});
-  const [lensNames, setLensNames] = useState<{ [any: string]: string }>({});
+  const [whoisQueryTrigger] = whoisApi.useLazyGetProfileQuery();
+  const [whoisProfiles, setWhoisProfiles] = useState<{ [any: string]: SuperfluidProfile | null }>({});
 
   const addressBookNames = useAppSelector((state) =>
     addressBookSelectors.selectByAddresses(state, addresses)
@@ -24,41 +19,23 @@ const useAddressNames = (addresses: string[]): AddressNames => {
 
   useEffect(() => {
     Promise.allSettled(
-      addresses.map((address) => ensLookupQueryTrigger(address, true))
-    ).then((ensResults) => {
-      setEnsNames(
-        ensResults.reduce((ensNamesMap, ensResult) => {
-          if (ensResult.status === "rejected" || !ensResult.value.data) {
-            return ensNamesMap;
+      addresses.map((address) => whoisQueryTrigger(address, true))
+    ).then((whoisResults) => {
+      setWhoisProfiles(
+        whoisResults.reduce((whoisProfilesMap, whoisResult) => {
+          if (whoisResult.status === "rejected" || !whoisResult.value.data) {
+            return whoisProfilesMap;
           }
 
           return {
-            ...ensNamesMap,
-            [ensResult.value.data.address.toLowerCase()]:
-              ensResult.value.data.name,
+            ...whoisProfilesMap,
+            [whoisResult.value.originalArgs.toLowerCase()]:
+              whoisResult.value.data,
           };
         }, {})
       );
     });
-
-    Promise.allSettled(
-      addresses.map((address) => lensLookupQueryTrigger(address, true))
-    ).then((lensResults) => {
-      setLensNames(
-        lensResults.reduce((ensNamesMap, lensResult) => {
-          if (lensResult.status === "rejected" || !lensResult.value.data) {
-            return ensNamesMap;
-          }
-
-          return {
-            ...ensNamesMap,
-            [lensResult.value.data.address.toLowerCase()]:
-              lensResult.value.data.name,
-          };
-        }, {})
-      );
-    });
-  }, [addresses, ensLookupQueryTrigger, lensLookupQueryTrigger]);
+  }, [addresses, whoisQueryTrigger]);
 
   return addresses.reduce((mappedAddresses, address) => {
     const addressChecksummed = getAddress(address);
@@ -67,20 +44,30 @@ const useAddressNames = (addresses: string[]): AddressNames => {
         (addressBookName) =>
           addressBookName.address.toLowerCase() === address.toLowerCase()
       )?.name || "";
-    const ensName = ensNames[address.toLowerCase()];
-    const lensName = lensNames[address.toLowerCase()];
     
-    const torexInfo = getTOREXInfo(addressChecksummed);
-    const torexName = torexInfo?.name;
+    const whoisProfile = whoisProfiles[address.toLowerCase()];
+    const ensName = whoisProfile?.ENS?.handle;
+    const lensName = whoisProfile?.Lens?.handle?.replace("lens/", "");
+    const farcasterName = whoisProfile?.Farcaster?.handle;
+    const alfaFrensName = whoisProfile?.AlfaFrens?.handle;
+    const torexName = whoisProfile?.TOREX?.handle;
+
+    const primaryAvatarUrl = whoisProfile?.recommendedAvatar ?? null;
+
+    const primaryName = addressBookName || whoisProfile?.recommendedName || "";
 
     return {
       ...mappedAddresses,
       [address]: {
         addressChecksummed,
-        name: addressBookName || torexName || ensName || lensName || "",
+        name: primaryName,
         ensName,
         lensName,
         torexName,
+        whoisProfile,
+        farcasterName,
+        alfaFrensName,
+        primaryAvatarUrl,
       },
     };
   }, {} as AddressNames);

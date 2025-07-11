@@ -1,9 +1,7 @@
 import { Avatar, AvatarProps } from "@mui/material";
 import { memo } from "react";
 import Blockies from "react-blockies";
-import { ensApi } from "../../features/ens/ensApi.slice";
-import { lensApi } from "../../features/lens/lensApi.slice";
-import { isTOREXAddress } from "../../features/torex/torexAddresses";
+import useAddressName from "../../hooks/useAddressName";
 
 interface BlockiesProps {
   size?: number;
@@ -27,37 +25,14 @@ export default memo(function AddressAvatar({
   AvatarProps = {},
   BlockiesProps = { size: 12, scale: 3 },
 }: AddressAvatarProps & RainbowKitAvatarComponentProps) {
-  const { currentData: ensAvatarUrl, isFetching: ensFetching } =
-    ensApi.useGetAvatarQuery(address);
-  const { currentData: lensData } = lensApi.useLookupAddressQuery(address);
+  const addressNameData = useAddressName(address);
 
-  // Check if this is a ToreX address first - ToreX avatars take priority
-  if (isTOREXAddress(address)) {
+  if (addressNameData.primaryAvatarUrl) {
     return (
       <Avatar
-        alt="SuperBoring Torex"
+        alt="profile avatar"
         variant="rounded"
-        src="/icons/superboring32x32.png"
-        {...AvatarProps}
-      />
-    );
-  }
-
-  if (ensAvatarUrl) {
-    return (
-      <Avatar
-        alt="ens avatar"
-        variant="rounded"
-        src={ensAvatarUrl}
-        {...AvatarProps}
-      />
-    );
-  } else if (!ensFetching && lensData?.avatarUrl) {
-    return (
-      <Avatar
-        alt="lens avatar"
-        variant="rounded"
-        src={lensData.avatarUrl}
+        src={addressNameData.primaryAvatarUrl}
         {...AvatarProps}
       />
     );
