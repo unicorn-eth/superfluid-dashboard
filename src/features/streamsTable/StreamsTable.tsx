@@ -24,6 +24,7 @@ import {
 } from "../../hooks/streamSchedulingHooks";
 import { CreateTask } from "../../scheduling-subgraph/.graphclient";
 import { schedulingSubgraphApi } from "../../scheduling-subgraph/schedulingSubgraphApi";
+import { vestingSubgraphApi } from "../../vesting-subgraph/vestingSubgraphApi";
 import { EmptyRow } from "../common/EmptyRow";
 import { Network } from "../network/networks";
 import {
@@ -210,6 +211,30 @@ const StreamsTable: FC<StreamsTableProps> = ({
     tokenAddress
   );
 
+  //Vesting schedules where user is either sender or receiver for the current token
+  const { currentData: vestingSchedulesData } =
+    vestingSubgraphApi.useGetVestingSchedulesQuery(
+      visibleAddress && network.vestingSubgraphUrl
+        ? {
+            chainId: network.id,
+            where: {
+              or: [
+                {
+                  superToken: tokenAddress.toLowerCase(),
+                  receiver: visibleAddress.toLowerCase(),
+                },
+                {
+                  superToken: tokenAddress.toLowerCase(),
+                  sender: visibleAddress.toLowerCase(),
+                },
+              ],
+            },
+            orderBy: "createdAt",
+            orderDirection: "desc",
+          }
+        : skipToken
+    );
+
   const allTasks = useMemo(
     () => [
       ...pendingTasks,
@@ -281,6 +306,10 @@ const StreamsTable: FC<StreamsTableProps> = ({
   ]);
 
   const streams = useMemo<StreamType[]>(() => {
+    const allVestingSchedules = (vestingSchedulesData?.vestingSchedules ?? []).filter(
+      (x) => !x.deletedAt
+    );
+    
     return [...incomingStreams, ...outgoingStreams]
       .map((stream) => {
         const isActive = stream.currentFlowRate !== "0";
@@ -305,10 +334,22 @@ const StreamsTable: FC<StreamsTableProps> = ({
           createTask &&
           Number(createTask.executionAt) === stream.createdAtTimestamp;
 
+        const associatedVestingSchedules = allVestingSchedules.filter(vs => 
+          vs.superToken.toLowerCase() === stream.token.toLowerCase() &&
+          vs.receiver.toLowerCase() === stream.receiver.toLowerCase() &&
+          Number(vs.cliffAndFlowDate) <= stream.createdAtTimestamp &&
+          Number(vs.endDate) > stream.createdAtTimestamp
+        );
+        
+        const mostLikelyAssociatedVestingSchedule = associatedVestingSchedules.find(vs => 
+          Number(vs.cliffAndFlowExecutedAt) === stream.createdAtTimestamp
+        ) ?? associatedVestingSchedules[0];
+
         return mapStreamScheduling(
           stream,
           hasScheduledStart ? Number(createTask.executionAt) : undefined,
-          !!deleteTask ? Number(deleteTask.executionAt) : undefined
+          !!deleteTask ? Number(deleteTask.executionAt) : undefined,
+          mostLikelyAssociatedVestingSchedule?.id
         );
       })
       .sort((s1, s2) => s2.updatedAtTimestamp - s1.updatedAtTimestamp)
@@ -320,7 +361,7 @@ const StreamsTable: FC<StreamsTableProps> = ({
         if (!stream1Active && stream2Active) return 1;
         return 0;
       });
-  }, [incomingStreams, outgoingStreams, allTasks]);
+  }, [incomingStreams, outgoingStreams, allTasks, vestingSchedulesData]);
 
   useEffect(() => {
     // don't refetch when there's a bunch of streams
