@@ -10,6 +10,9 @@ import { createAppKit } from '@reown/appkit/react'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { CustomRpcUrlMap } from '@reown/appkit-common'
 
+// 🦄 Import Unicorn integration
+import { createUnicornConnectors, debugUnicornSetup } from './unicornIntegration';
+
 const metadata = {
   name: 'Superfluid Dashboard',
   description: defaultAppDescription,
@@ -177,6 +180,14 @@ if (needsTestConnector) {
 }
 // ---
 
+// 🦄 Create Unicorn connectors
+const unicornConnectors = createUnicornConnectors();
+
+// 🦄 Debug in development
+if (process.env.NODE_ENV === 'development') {
+  debugUnicornSetup();
+}
+
 const wagmiAdapter = new WagmiAdapter({
   ssr: false,
   networks: allNetworks,
@@ -184,6 +195,8 @@ const wagmiAdapter = new WagmiAdapter({
   projectId,
   storage: typeof window !== "undefined" ? createStorage({ storage: window.localStorage }) : undefined,
   connectors: [
+    // 🦄 Add Unicorn connectors first (priority for gasless transactions)
+    ...unicornConnectors,
     safe({
       allowedDomains: [
         /gnosis-safe.io$/,

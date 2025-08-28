@@ -1,6 +1,7 @@
 // import "../wdyr"; // Un-comment if you want Why-Did-You-Render support
 import '../BigInt.toJson';
 
+import UnicornAutoConnect from "../features/wallet/UnicornAutoConnect"; //Unicorn
 import { allNetworks as _importNetworksForInitialization } from "../features/network/networks";
 import { CacheProvider, EmotionCache } from "@emotion/react";
 import { NextPage } from "next";
@@ -75,6 +76,12 @@ export default function MyApp(props: AppPropsWithLayout) {
           <meta name="viewport" content="initial-scale=1, width=device-width" />
         </Head>
         <WagmiManager>
+          {/** 
+            🦄 UNICORN INTEGRATION: Add AutoConnect right after WagmiManager
+            This ensures Wagmi is set up before we attempt Unicorn connection
+          **/}
+          <UnicornAutoConnect />
+          
           <ReduxProvider>
             <AvailableNetworksProvider>
               <ImpersonationProvider>
@@ -127,4 +134,34 @@ function GlobalSuperfluidDashboardObjectInitializer() {
   }, [appDispatch]);
 
   return null;
+}
+
+function UnicornAnalyticsWrapper() {
+  const handleUnicornConnect = useCallback((address: string) => {
+    // Track Unicorn connections for analytics
+    if (window.analytics) {
+      window.analytics.track('Unicorn Wallet Connected', {
+        address,
+        timestamp: new Date().toISOString(),
+        source: 'auto-connect',
+      });
+    }
+  }, []);
+
+  const handleUnicornError = useCallback((error: Error) => {
+    // Track connection failures
+    if (window.analytics) {
+      window.analytics.track('Unicorn Connection Failed', {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }, []);
+
+  return (
+    <UnicornAutoConnect
+      onConnectSuccess={handleUnicornConnect}
+      onConnectError={handleUnicornError}
+    />
+  );
 }
