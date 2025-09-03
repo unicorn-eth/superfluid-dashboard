@@ -2,30 +2,34 @@
 /** 
  * Coded with love by @cryptowampum and Claude AI
  */
+// src/features/wallet/unicornIntegration.ts
+
 import { createThirdwebClient, defineChain } from "thirdweb";
 import { inAppWalletConnector } from '@thirdweb-dev/wagmi-adapter';
 import { allNetworks } from "../network/networks";
 import { Network } from "../network/networks";
 
-// Unicorn.eth official configuration
-const UNICORN_CLIENT_ID = "4e8c81182c3709ee441e30d776223354";
-const UNICORN_FACTORY_ADDRESS = "0xD771615c873ba5a2149D5312448cE01D677Ee48A";
+// Unicorn.eth configuration from environment variables with official fallbacks
+const UNICORN_CLIENT_ID = process.env.NEXT_PUBLIC_UNICORN_CLIENT_ID || "4e8c81182c3709ee441e30d776223354";
+const UNICORN_FACTORY_ADDRESS = process.env.NEXT_PUBLIC_UNICORN_FACTORY_ADDRESS || "0xD771615c873ba5a2149D5312448cE01D677Ee48A";
 
-// Create Thirdweb client (reused across all connectors)
-const thirdwebClient = createThirdwebClient({
-  clientId: UNICORN_CLIENT_ID,
-});
+// Validate configuration
+if (!UNICORN_CLIENT_ID) {
+  throw new Error("NEXT_PUBLIC_UNICORN_CLIENT_ID is required for Unicorn integration");
+}
 
-export const unicornConfig = {
-  clientId: UNICORN_CLIENT_ID,
-  factoryAddress: UNICORN_FACTORY_ADDRESS,
-  isEnabled: process.env.NEXT_PUBLIC_UNICORN_ENABLED !== 'false',
-  debugMode: process.env.NEXT_PUBLIC_UNICORN_DEBUG === 'true',
-  iconUrl: process.env.NEXT_PUBLIC_UNICORN_ICON_URL || '/unicorn-icon.png',
-  priorityNetworks: process.env.NEXT_PUBLIC_UNICORN_PRIORITY_NETWORKS 
-    ? process.env.NEXT_PUBLIC_UNICORN_PRIORITY_NETWORKS.split(',').map(Number)
-    : UNICORN_PRIORITY_NETWORKS,
-} as const;
+if (!UNICORN_FACTORY_ADDRESS) {
+  throw new Error("NEXT_PUBLIC_UNICORN_FACTORY_ADDRESS is required for Unicorn integration");
+}
+
+// Log configuration in development
+if (process.env.NODE_ENV === 'development') {
+  console.log('🦄 Unicorn Configuration:');
+  console.log(`  Client ID: ${UNICORN_CLIENT_ID}`);
+  console.log(`  Factory Address: ${UNICORN_FACTORY_ADDRESS}`);
+  console.log(`  Using ${process.env.NEXT_PUBLIC_UNICORN_CLIENT_ID ? 'custom' : 'default'} client ID`);
+  console.log(`  Using ${process.env.NEXT_PUBLIC_UNICORN_FACTORY_ADDRESS ? 'custom' : 'default'} factory address`);
+}
 
 /**
  * Priority networks for Unicorn integration
@@ -41,6 +45,25 @@ const UNICORN_PRIORITY_NETWORKS = [
   // Add other Superfluid networks as needed
 ];
 
+// Create Thirdweb client (reused across all connectors)
+const thirdwebClient = createThirdwebClient({
+  clientId: UNICORN_CLIENT_ID,
+});
+
+/**
+ * Configuration object
+ */
+export const unicornConfig = {
+  clientId: UNICORN_CLIENT_ID,
+  factoryAddress: UNICORN_FACTORY_ADDRESS,
+  isEnabled: process.env.NEXT_PUBLIC_UNICORN_ENABLED !== 'false',
+  debugMode: process.env.NEXT_PUBLIC_UNICORN_DEBUG === 'true',
+  iconUrl: process.env.NEXT_PUBLIC_UNICORN_ICON_URL || '/unicorn-icon.png',
+  priorityNetworks: process.env.NEXT_PUBLIC_UNICORN_PRIORITY_NETWORKS 
+    ? process.env.NEXT_PUBLIC_UNICORN_PRIORITY_NETWORKS.split(',').map(Number)
+    : UNICORN_PRIORITY_NETWORKS,
+} as const;
+
 /**
  * Creates a Unicorn connector for a specific Superfluid network
  */
@@ -50,14 +73,14 @@ export const createUnicornConnector = (network: Network) => {
     smartAccount: {
       sponsorGas: true, // This is HUGE for mainnet where gas is expensive!
       chain: defineChain(network.id),
-      factoryAddress: UNICORN_FACTORY_ADDRESS,
+      factoryAddress: unicornConfig.factoryAddress,
     },
     metadata: {
       name: `Unicorn.eth${network.isTestNetwork ? ' (Testnet)' : ''}`,
       description: `Smart Account Wallet on ${network.displayName}`,
-      icon: '/unicorn-icon.svg', // You'll need to add this
+      icon: unicornConfig.iconUrl,
       image: {
-        src: '/unicorn-icon.svg',
+        src: unicornConfig.iconUrl,
         alt: `Unicorn.eth on ${network.displayName}`,
         height: 64,
         width: 64,
@@ -81,12 +104,16 @@ export const createUnicornConnectors = () => {
   
   return allNetworks
     .filter(network => {
+      // Production: Only mainnet and major L2s
       if (isProduction) {
         return !network.isTestNetwork && unicornConfig.priorityNetworks.includes(network.id);
       }
+      
+      // Development: Include testnets for testing
       return true;
     })
     .sort((a, b) => {
+      // Sort by priority: Mainnet first, then by priority list
       const aPriority = unicornConfig.priorityNetworks.indexOf(a.id);
       const bPriority = unicornConfig.priorityNetworks.indexOf(b.id);
       
@@ -95,34 +122,14 @@ export const createUnicornConnectors = () => {
       if (bPriority === -1) return -1;
       return aPriority - bPriority;
     })
-    .map(network => 
-      inAppWalletConnector({
-        client: thirdwebClient,
-        smartAccount: {
-          sponsorGas: true,
-          chain: defineChain(network.id),
-          factoryAddress: unicornConfig.factoryAddress,
-        },
-        metadata: {
-          name: `Unicorn.eth${network.isTestNetwork ? ' (Testnet)' : ''}`,
-          description: `Smart Account Wallet on ${network.displayName}`,
-          icon: unicornConfig.iconUrl,
-          image: {
-            src: unicornConfig.iconUrl,
-            alt: `Unicorn.eth on ${network.displayName}`,
-            height: 64,
-            width: 64,
-          },
-        },
-      })
-    );
+    .map(createUnicornConnector);
 };
 
 /**
  * Detects if user is coming from Unicorn App Center
  */
 export const detectUnicornConnection = () => {
-  if (typeof window === 'undefined') return { isFromUnicorn: false };
+  if (typeof window === 'undefined') return { isFromUnicorn: false, shouldAutoConnect: false };
   
   const urlParams = new URLSearchParams(window.location.search);
   const walletId = urlParams.get('walletId');
@@ -159,7 +166,7 @@ export const getUnicornSupportedNetworks = (): Network[] => {
   
   return allNetworks.filter(network => {
     if (isProduction) {
-      return !network.isTestNetwork && UNICORN_PRIORITY_NETWORKS.includes(network.id);
+      return !network.isTestNetwork && unicornConfig.priorityNetworks.includes(network.id);
     }
     return true;
   });
@@ -192,28 +199,6 @@ export const debugUnicornSetup = () => {
   
   return { connectors, supportedNetworks, config: unicornConfig };
 };
-export function createConnectorsWithUnicorn() {
-  const connectors = [];
-  
-  // Add your existing connectors
-  // connectors.push(...existingConnectors);
-  
-  // Conditionally add Unicorn connectors
-  if (unicornConfig.isEnabled) {
-    const unicornConnectors = createUnicornConnectors();
-    
-    if (unicornConfig.debugMode) {
-      console.log(`🦄 Adding ${unicornConnectors.length} Unicorn connectors`);
-    }
-    
-    // Add at beginning for priority
-    connectors.unshift(...unicornConnectors);
-  } else if (unicornConfig.debugMode) {
-    console.log('🦄 Unicorn integration disabled via environment variable');
-  }
-  
-  return connectors;
-}
 
 // Export the client for advanced usage
 export { thirdwebClient };
