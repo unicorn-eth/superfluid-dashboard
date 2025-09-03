@@ -2,7 +2,7 @@ import { useEthersSigner } from "@/utils/wagmiEthersAdapters"
 import { useAppKitAccount, useAppKitNetwork, useAppKitState, useDisconnect as useAppKitDisconnect } from "@reown/appkit/react"
 import { useEffect, useState } from "react"
 import { useAccount as useWagmiAccount, useDisconnect as useWagmiDisconnect } from "wagmi"
-import { isUnicornConnector } from "@/features/wallet/unicornIntegration"
+import { isUnicornConnector } from "../../features/wallet/unicornIntegration";
 
 export function WalletWeirdnessHandler() {
     const { chainId: wagmiChainId } = useWagmiAccount()
