@@ -4,8 +4,10 @@ import { useEffect, useState } from "react"
 import { useAccount as useWagmiAccount, useDisconnect as useWagmiDisconnect } from "wagmi"
 import { isUnicornConnector } from "../../features/wallet/unicornIntegration";
 
+
 export function WalletWeirdnessHandler() {
-    const { chainId: wagmiChainId } = useWagmiAccount()
+    const { chainId: wagmiChainId, connector } = useWagmiAccount() // <- Make sure you have 'connector' here
+
     const { chainId: appkitChainId } = useAppKitNetwork()
 
     const { disconnect: wagmiDisconnect } = useWagmiDisconnect()
