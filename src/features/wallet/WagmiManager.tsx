@@ -3,6 +3,7 @@ import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { wagmiConfig, resolvedWagmiClients } from "./wagmiConfig";
 import dynamic from 'next/dynamic';
+import UnicornAutoConnect from './UnicornAutoConnect';
 
 const WalletWeirdnessHandler = dynamic(
   () => import('@/components/WalletWeirdnessHandler/WalletWeirdnessHandler')
@@ -23,6 +24,7 @@ const WagmiManager: FC<PropsWithChildren> = ({ children }) => {
   return (
     <WagmiProvider config={wagmiConfig} reconnectOnMount={reconnectOnMount}>
       <QueryClientProvider client={tanstackQueryClient}>
+        <UnicornAutoConnect /> 
         {children}
         <WalletWeirdnessHandler />
       </QueryClientProvider>

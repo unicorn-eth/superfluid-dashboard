@@ -188,6 +188,7 @@ if (process.env.NODE_ENV === 'development') {
   debugUnicornSetup();
 }
 
+
 const wagmiAdapter = new WagmiAdapter({
   ssr: false,
   networks: allNetworks,
